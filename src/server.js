@@ -1,16 +1,11 @@
-require('dotenv').config();
-const express = require('express');
-const connectDB = require('./config/db');
+require("dotenv").config();
+const app = require("./app");
+const connectDB = require("./config/database");
 
-const app = express();
+const PORT = process.env.PORT || 3000;
 
-connectDB();
-
-app.use(express.json());
-
-app.get('/', (req, res) => {
-  res.send('API Fitness fonctionne !');
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`🚀 Serveur lancé sur http://localhost:${PORT}`);
+  });
 });
-
-const PORT = process.env.PORT || 5000; 
-app.listen(PORT, () => console.log(`Serveur démarré sur le port ${PORT}`));
