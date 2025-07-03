@@ -1,3 +1,5 @@
+const mongoose = require("mongoose");
+
 const salleSchema = new mongoose.Schema({
   nom: String,
   adresse: String,
@@ -11,3 +13,6 @@ const salleSchema = new mongoose.Schema({
     { type: mongoose.Schema.Types.ObjectId, ref: "ExerciceType" },
   ],
 });
+
+module.exports = mongoose.model("Salle", salleSchema);
+
