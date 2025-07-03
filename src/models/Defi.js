@@ -1,7 +1,9 @@
+const mongoose = require("mongoose");
+
 const defiSchema = new mongoose.Schema({
   titre: String,
   description: String,
-  typeExercice: { type: mongoose.Schema.Types.ObjectId, ref: "ExerciceType" },
+  exercices: [{ type: mongoose.Schema.Types.ObjectId, ref: "Exercice" }],
   difficulte: { type: String, enum: ["facile", "moyen", "difficile"] },
   objectifs: {
     repetitions: Number,
@@ -13,3 +15,5 @@ const defiSchema = new mongoose.Schema({
   participants: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   statut: { type: String, enum: ["actif", "termine"], default: "actif" },
 });
+
+module.exports = mongoose.model("Defi", defiSchema);
