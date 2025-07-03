@@ -1,3 +1,5 @@
+const mongoose = require("mongoose");
+
 const suiviDefiSchema = new mongoose.Schema({
   utilisateur: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   defi: { type: mongoose.Schema.Types.ObjectId, ref: "Defi" },
@@ -6,3 +8,5 @@ const suiviDefiSchema = new mongoose.Schema({
   progression: String, // ex: "terminé", "en cours"
   notePerso: String,
 });
+
+module.exports = mongoose.model("SuiviDefi", suiviDefiSchema);

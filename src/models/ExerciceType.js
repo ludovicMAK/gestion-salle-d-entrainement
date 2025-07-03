@@ -6,4 +6,4 @@ const exerciceTypeSchema = new mongoose.Schema({
   musclesCibles: [String],
 });
 
-module.exports = mongoose.model("exerciceType", exerciceTypeSchema);
+module.exports = mongoose.model("ExerciceType", exerciceTypeSchema);
