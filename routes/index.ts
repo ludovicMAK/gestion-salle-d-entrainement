@@ -17,6 +17,8 @@ import { defiRoutes } from './defi.routes';
 import { seanceRoutes } from './seance-entrainement.routes';
 import { suiviDefiRoutes } from './suivi-defi.routes';
 import { exerciceTypeRoutes, badgeRoutes } from './misc.routes';
+import { userRoutes } from './user.routes';
+import { authRoutes } from './auth.routes';
 
 interface Controllers {
     salleController: SalleController;
@@ -33,24 +35,24 @@ interface Controllers {
 export const createRoutes = (controllers: Controllers): Router => {
     const router = Router();
 
-    // API version prefix
-    const apiV1 = Router();
+    // API routes
+    const apiRouter = Router();
 
     // Authentication routes
-    // apiV1.use('/auth', authRoutes(controllers.authController));
+    apiRouter.use('/auth', authRoutes(controllers.authController));
 
     // Resource routes
-    apiV1.use('/salles', salleRoutes(controllers.salleController));
-    apiV1.use('/exercices', exerciceRoutes(controllers.exerciceController));
-    apiV1.use('/exercice-types', exerciceTypeRoutes(controllers.exerciceTypeController));
-    apiV1.use('/defis', defiRoutes(controllers.defiController));
-    apiV1.use('/seances', seanceRoutes(controllers.seanceController));
-    apiV1.use('/suivi-defis', suiviDefiRoutes(controllers.suiviDefiController));
-    apiV1.use('/badges', badgeRoutes(controllers.badgeController));
-    // apiV1.use('/users', userRoutes(controllers.userController));
+    apiRouter.use('/salles', salleRoutes(controllers.salleController));
+    apiRouter.use('/exercices', exerciceRoutes(controllers.exerciceController));
+    apiRouter.use('/exercice-types', exerciceTypeRoutes(controllers.exerciceTypeController));
+    apiRouter.use('/defis', defiRoutes(controllers.defiController));
+    apiRouter.use('/seances', seanceRoutes(controllers.seanceController));
+    apiRouter.use('/suivi-defis', suiviDefiRoutes(controllers.suiviDefiController));
+    apiRouter.use('/badges', badgeRoutes(controllers.badgeController));
+    apiRouter.use('/users', userRoutes(controllers.userController));
 
-    // Mount API v1 under /api/v1
-    router.use('/api/v1', apiV1);
+    // Mount API under /api
+    router.use('/api', apiRouter);
 
     return router;
 };

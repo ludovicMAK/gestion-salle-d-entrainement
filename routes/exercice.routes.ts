@@ -12,8 +12,7 @@ export const exerciceRoutes = (exerciceController: ExerciceController): Router =
     router.delete('/:id', exerciceController.deleteExercice.bind(exerciceController));
     
     // Routes spécifiques
-    router.patch('/:id/activate', exerciceController.activateExercice.bind(exerciceController));
-    router.patch('/:id/deactivate', exerciceController.deactivateExercice.bind(exerciceController));
+    router.patch('/:id/actif', exerciceController.toggleExerciceStatus.bind(exerciceController));
     router.get('/type/:typeId', exerciceController.getExercicesByType.bind(exerciceController));
     router.get('/niveau/:niveau', exerciceController.getExercicesByNiveau.bind(exerciceController));
     router.post('/search/muscles', exerciceController.searchExercicesByMuscles.bind(exerciceController));

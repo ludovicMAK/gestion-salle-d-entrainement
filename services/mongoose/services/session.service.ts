@@ -26,4 +26,12 @@ export class SessionService {
         }).populate('user'); // populate permet de charger un objet d'une autre collection a partir de son id
         return session;
     }
+
+    async deleteSession(sessionId: string): Promise<boolean> {
+        if(!isValidObjectId(sessionId)) {
+            return false;
+        }
+        const result = await this.sessionModel.findByIdAndDelete(sessionId);
+        return result !== null;
+    }
 }

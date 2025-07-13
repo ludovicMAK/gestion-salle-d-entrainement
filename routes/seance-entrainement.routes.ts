@@ -12,7 +12,7 @@ export const seanceRoutes = (seanceController: SeanceEntrainementController): Ro
     router.delete('/:id', seanceController.deleteSeance.bind(seanceController));
     
     // Routes spécifiques
-    router.get('/user/:userId', seanceController.getSeancesByUser.bind(seanceController));
+    router.get('/utilisateur/:userId', seanceController.getSeancesByUser.bind(seanceController));
     router.get('/salle/:salleId', seanceController.getSeancesBySalle.bind(seanceController));
     router.get('/defi/:defiId', seanceController.getSeancesByDefi.bind(seanceController));
     router.get('/stats/:userId', seanceController.getUserStats.bind(seanceController));

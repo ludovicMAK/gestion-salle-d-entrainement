@@ -40,6 +40,83 @@ export class UserController {
         res.status(204).end();
     }
 
+    async getUsers(req: Request, res: Response) {
+        try {
+            const users = await this.userService.getUsers();
+            res.json(users);
+        } catch (error) {
+            res.status(500).json({ error: 'Erreur lors de la récupération des utilisateurs' });
+        }
+    }
+
+    async getUser(req: Request, res: Response) {
+        try {
+            const userId = req.params.id;
+            const user = await this.userService.getUser(userId);
+            if (!user) {
+                res.status(404).json({ error: 'Utilisateur non trouvé' });
+                return;
+            }
+            res.json(user);
+        } catch (error) {
+            res.status(500).json({ error: 'Erreur lors de la récupération de l\'utilisateur' });
+        }
+    }
+
+    async updateUser(req: Request, res: Response) {
+        try {
+            const userId = req.params.id;
+            const updateData = req.body;
+            const user = await this.userService.updateUser(userId, updateData);
+            if (!user) {
+                res.status(404).json({ error: 'Utilisateur non trouvé' });
+                return;
+            }
+            res.json(user);
+        } catch (error) {
+            res.status(500).json({ error: 'Erreur lors de la mise à jour de l\'utilisateur' });
+        }
+    }
+
+    async deleteUser(req: Request, res: Response) {
+        try {
+            const userId = req.params.id;
+            const deleted = await this.userService.deleteUser(userId);
+            if (!deleted) {
+                res.status(404).json({ error: 'Utilisateur non trouvé' });
+                return;
+            }
+            res.status(204).end();
+        } catch (error) {
+            res.status(500).json({ error: 'Erreur lors de la suppression de l\'utilisateur' });
+        }
+    }
+
+    async getUsersByRole(req: Request, res: Response) {
+        try {
+            const role = req.params.role;
+            const users = await this.userService.getUsersByRole(role);
+            res.json(users);
+        } catch (error) {
+            res.status(500).json({ error: 'Erreur lors de la récupération des utilisateurs par rôle' });
+        }
+    }
+
+    async toggleUserStatus(req: Request, res: Response) {
+        try {
+            const userId = req.params.id;
+            const { actif } = req.body;
+            const user = await this.userService.toggleUserStatus(userId, actif);
+            if (!user) {
+                res.status(404).json({ error: 'Utilisateur non trouvé' });
+                return;
+            }
+            res.json(user);
+        } catch (error) {
+            res.status(500).json({ error: 'Erreur lors du changement de statut' });
+        }
+    }
+
     buildRouter(): Router {
         const router = Router();
         router.post('/',

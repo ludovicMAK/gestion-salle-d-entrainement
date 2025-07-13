@@ -94,4 +94,8 @@ export class DefiService {
     async terminate(id: string | Types.ObjectId): Promise<Defi | null> {
         return await this.update(id, { statut: StatutDefi.TERMINE });
     }
+
+    async updateStatus(id: string | Types.ObjectId, statut: StatutDefi): Promise<Defi | null> {
+        return await this.update(id, { statut });
+    }
 }

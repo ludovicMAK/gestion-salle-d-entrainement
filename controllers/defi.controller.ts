@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { DefiService } from '../services/mongoose/services';
-import { DifficulteDefi } from '../models';
+import { DifficulteDefi, StatutDefi } from '../models';
 
 export class DefiController {
     constructor(private defiService: DefiService) {}
@@ -140,6 +140,36 @@ export class DefiController {
             res.json({ success: true, data: defi, message: 'Défi terminé avec succès' });
         } catch (error) {
             res.status(400).json({ success: false, message: 'Erreur lors de la terminaison du défi', error });
+        }
+    }
+
+    async changeDefiStatus(req: Request, res: Response): Promise<void> {
+        try {
+            const { id } = req.params;
+            const { statut } = req.body;
+            
+            if (!statut || !['actif', 'termine', 'suspendu'].includes(statut)) {
+                res.status(400).json({ 
+                    success: false, 
+                    message: 'Statut invalide. Valeurs autorisées: actif, termine, suspendu' 
+                });
+                return;
+            }
+            
+            const defi = await this.defiService.updateStatus(id, statut as StatutDefi);
+            
+            if (!defi) {
+                res.status(404).json({ success: false, message: 'Défi non trouvé' });
+                return;
+            }
+            
+            res.json({ 
+                success: true, 
+                data: defi, 
+                message: `Statut du défi changé vers "${statut}" avec succès` 
+            });
+        } catch (error) {
+            res.status(400).json({ success: false, message: 'Erreur lors du changement de statut du défi', error });
         }
     }
 

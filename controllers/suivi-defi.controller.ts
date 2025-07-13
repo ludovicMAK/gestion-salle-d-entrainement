@@ -67,6 +67,16 @@ export class SuiviDefiController {
         }
     }
 
+    async getParticipantsByDefi(req: Request, res: Response): Promise<void> {
+        try {
+            const { defiId } = req.params;
+            const participants = await this.suiviDefiService.getParticipantsWithProgression(defiId);
+            res.json({ success: true, data: participants });
+        } catch (error) {
+            res.status(500).json({ success: false, message: 'Erreur lors de la récupération des participants du défi', error });
+        }
+    }
+
     async getSuivisByUserAndDefi(req: Request, res: Response): Promise<void> {
         try {
             const { userId, defiId } = req.params;

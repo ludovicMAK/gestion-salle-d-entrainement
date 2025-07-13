@@ -1,7 +1,29 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import { UserService, SessionService } from '../services/mongoose/services';
-import { AuthController, UserController } from '../controllers';
+import { createRoutes } from '../routes';
+import { 
+    UserService, 
+    SessionService, 
+    SalleService, 
+    ExerciceService, 
+    ExerciceTypeService,
+    DefiService,
+    SeanceEntrainementService,
+    SuiviDefiService,
+    BadgeService
+} from '../services/mongoose/services';
+import { 
+    AuthController, 
+    UserController,
+    SalleController,
+    ExerciceController,
+    ExerciceTypeController,
+    DefiController,
+    SeanceEntrainementController,
+    SuiviDefiController,
+    BadgeController
+} from '../controllers';
+import { salleSchema, exerciceSchema, exerciceTypeSchema, defiSchema, seanceEntrainementSchema, suiviDefiSchema, badgeSchema } from '../services/mongoose/schema';
 
 class App {
     public app: express.Application;
@@ -18,19 +40,58 @@ class App {
     }
 
     private initializeRoutes(): void {
-        // Initialize services with mongoose connection
+        // Initialize models
+        const SalleModel = mongoose.models.Salle || mongoose.model('Salle', salleSchema());
+        const ExerciceModel = mongoose.models.Exercice || mongoose.model('Exercice', exerciceSchema());
+        const ExerciceTypeModel = mongoose.models.ExerciceType || mongoose.model('ExerciceType', exerciceTypeSchema());
+        const DefiModel = mongoose.models.Defi || mongoose.model('Defi', defiSchema());
+        const SeanceModel = mongoose.models.SeanceEntrainement || mongoose.model('SeanceEntrainement', seanceEntrainementSchema());
+        const SuiviDefiModel = mongoose.models.SuiviDefi || mongoose.model('SuiviDefi', suiviDefiSchema());
+        const BadgeModel = mongoose.models.Badge || mongoose.model('Badge', badgeSchema());
+
+        // Initialize services
         const userService = new UserService(mongoose);
         const sessionService = new SessionService(mongoose);
+        const salleService = new SalleService(SalleModel);
+        const exerciceService = new ExerciceService(ExerciceModel);
+        const exerciceTypeService = new ExerciceTypeService(ExerciceTypeModel);
+        const defiService = new DefiService(DefiModel);
+        const seanceService = new SeanceEntrainementService(SeanceModel);
+        const suiviDefiService = new SuiviDefiService(SuiviDefiModel);
+        const badgeService = new BadgeService(BadgeModel);
 
         // Initialize controllers
         const authController = new AuthController(userService, sessionService);
         const userController = new UserController(userService, sessionService);
+        const salleController = new SalleController(salleService);
+        const exerciceController = new ExerciceController(exerciceService, exerciceTypeService);
+        const exerciceTypeController = new ExerciceTypeController(exerciceTypeService);
+        const defiController = new DefiController(defiService);
+        const seanceController = new SeanceEntrainementController(seanceService);
+        const suiviDefiController = new SuiviDefiController(suiviDefiService);
+        const badgeController = new BadgeController(badgeService);
 
-        // Route setup
-        this.app.use('/auth', authController.buildRouter());
-        this.app.use('/api/users', userController.buildRouter());
+        // Create routes
+        const routes = createRoutes({
+            salleController,
+            exerciceController,
+            exerciceTypeController,
+            defiController,
+            seanceController,
+            suiviDefiController,
+            badgeController,
+            userController,
+            authController
+        });
+
+        // Use routes
+        this.app.use(routes);
         
         // Health check route
+        this.app.get('/', (req, res) => {
+            res.json({ status: 'OK', message: 'Serveur en cours d\'exécution' });
+        });
+        
         this.app.get('/health', (req, res) => {
             res.json({ status: 'OK', message: 'Serveur en cours d\'exécution' });
         });

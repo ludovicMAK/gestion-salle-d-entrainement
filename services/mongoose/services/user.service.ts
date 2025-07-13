@@ -41,4 +41,44 @@ export class UserService {
         });
     }
 
+    async getUsers(): Promise<User[]> {
+        return this.userModel.find().sort({ createdAt: -1 });
+    }
+
+    async getUser(userId: string): Promise<User | null> {
+        if(!isValidObjectId(userId)) {
+            return null;
+        }
+        return this.userModel.findById(userId);
+    }
+
+    async updateUser(userId: string, updateData: Partial<User>): Promise<User | null> {
+        if(!isValidObjectId(userId)) {
+            return null;
+        }
+        if (updateData.password) {
+            updateData.password = sha256(updateData.password);
+        }
+        return this.userModel.findByIdAndUpdate(userId, updateData, { new: true });
+    }
+
+    async deleteUser(userId: string): Promise<boolean> {
+        if(!isValidObjectId(userId)) {
+            return false;
+        }
+        const result = await this.userModel.findByIdAndDelete(userId);
+        return result !== null;
+    }
+
+    async getUsersByRole(role: string): Promise<User[]> {
+        return this.userModel.find({ role }).sort({ createdAt: -1 });
+    }
+
+    async toggleUserStatus(userId: string, actif: boolean): Promise<User | null> {
+        if(!isValidObjectId(userId)) {
+            return null;
+        }
+        return this.userModel.findByIdAndUpdate(userId, { actif }, { new: true });
+    }
+
 }

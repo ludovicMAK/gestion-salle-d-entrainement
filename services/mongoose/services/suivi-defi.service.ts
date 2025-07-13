@@ -93,4 +93,12 @@ export class SuiviDefiService {
     async delete(id: string | Types.ObjectId): Promise<SuiviDefi | null> {
         return await this.suiviDefiModel.findByIdAndDelete(id).exec();
     }
+
+    async getParticipantsWithProgression(defiId: string | Types.ObjectId): Promise<any[]> {
+        return await this.suiviDefiModel.find({ defi: defiId })
+            .populate('utilisateur', 'nom email')
+            .populate('defi', 'titre description')
+            .sort({ progression: 1, createdAt: -1 })
+            .exec();
+    }
 }

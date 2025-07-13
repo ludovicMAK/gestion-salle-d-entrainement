@@ -13,9 +13,10 @@ export const suiviDefiRoutes = (suiviController: SuiviDefiController): Router =>
     
     // Routes spécifiques
     router.patch('/:id/progression', suiviController.updateProgression.bind(suiviController));
-    router.get('/user/:userId', suiviController.getSuivisByUser.bind(suiviController));
+    router.get('/utilisateur/:userId', suiviController.getSuivisByUser.bind(suiviController));
+    router.get('/utilisateur/:userId/defi/:defiId', suiviController.getSuivisByUserAndDefi.bind(suiviController));
+    router.get('/defi/:defiId/participants', suiviController.getParticipantsByDefi.bind(suiviController));
     router.get('/defi/:defiId', suiviController.getSuivisByDefi.bind(suiviController));
-    router.get('/user/:userId/defi/:defiId', suiviController.getSuivisByUserAndDefi.bind(suiviController));
     router.get('/progression/:progression', suiviController.getSuivisByProgression.bind(suiviController));
     router.get('/stats/:defiId', suiviController.getProgressionStats.bind(suiviController));
 

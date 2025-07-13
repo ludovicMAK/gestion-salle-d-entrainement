@@ -51,6 +51,10 @@ export class SalleService {
         return await this.update(id, { approuvee: true });
     }
 
+    async updateApproval(id: string | Types.ObjectId, approuvee: boolean): Promise<Salle | null> {
+        return await this.update(id, { approuvee });
+    }
+
     async searchByEquipments(equipements: string[]): Promise<Salle[]> {
         return await this.salleModel.find({
             equipements: { $in: equipements },

@@ -101,6 +101,33 @@ export class SalleController {
         }
     }
 
+    async toggleSalleApproval(req: Request, res: Response): Promise<void> {
+        try {
+            const { id } = req.params;
+            const { approuvee } = req.body;
+            
+            if (typeof approuvee !== 'boolean') {
+                res.status(400).json({ success: false, message: 'Le champ approuvee doit être un booléen' });
+                return;
+            }
+            
+            const salle = await this.salleService.updateApproval(id, approuvee);
+            
+            if (!salle) {
+                res.status(404).json({ success: false, message: 'Salle non trouvée' });
+                return;
+            }
+            
+            res.json({ 
+                success: true, 
+                data: salle, 
+                message: `Salle ${approuvee ? 'approuvée' : 'désapprouvée'} avec succès` 
+            });
+        } catch (error) {
+            res.status(400).json({ success: false, message: 'Erreur lors du changement d\'approbation de la salle', error });
+        }
+    }
+
     async deleteSalle(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;

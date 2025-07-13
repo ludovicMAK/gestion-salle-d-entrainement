@@ -12,7 +12,7 @@ export const salleRoutes = (salleController: SalleController): Router => {
     router.delete('/:id', salleController.deleteSalle.bind(salleController));
     
     // Routes spécifiques
-    router.patch('/:id/approve', salleController.approveSalle.bind(salleController));
+    router.patch('/:id/approuvee', salleController.toggleSalleApproval.bind(salleController));
     router.get('/owner/:ownerId', salleController.getSallesByOwner.bind(salleController));
     router.post('/search/equipments', salleController.searchSallesByEquipments.bind(salleController));
 

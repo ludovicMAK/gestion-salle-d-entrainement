@@ -12,8 +12,8 @@ export const defiRoutes = (defiController: DefiController): Router => {
     router.delete('/:id', defiController.deleteDefi.bind(defiController));
     
     // Routes spécifiques
-    router.patch('/:id/terminate', defiController.terminateDefi.bind(defiController));
-    router.post('/:id/join', defiController.joinDefi.bind(defiController));
+    router.patch('/:id/statut', defiController.changeDefiStatus.bind(defiController));
+    router.post('/:id/rejoindre', defiController.joinDefi.bind(defiController));
     router.post('/:id/leave', defiController.leaveDefi.bind(defiController));
     router.get('/creator/:creatorId', defiController.getDefisByCreator.bind(defiController));
     router.get('/salle/:salleId', defiController.getDefisBySalle.bind(defiController));

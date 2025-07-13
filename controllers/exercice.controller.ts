@@ -139,6 +139,35 @@ export class ExerciceController {
         }
     }
 
+    async toggleExerciceStatus(req: Request, res: Response): Promise<void> {
+        try {
+            const { id } = req.params;
+            const { actif } = req.body;
+            
+            if (typeof actif !== 'boolean') {
+                res.status(400).json({ success: false, message: 'Le champ actif doit être un booléen' });
+                return;
+            }
+            
+            const exercice = actif 
+                ? await this.exerciceService.activate(id) 
+                : await this.exerciceService.deactivate(id);
+            
+            if (!exercice) {
+                res.status(404).json({ success: false, message: 'Exercice non trouvé' });
+                return;
+            }
+            
+            res.json({ 
+                success: true, 
+                data: exercice, 
+                message: `Exercice ${actif ? 'activé' : 'désactivé'} avec succès` 
+            });
+        } catch (error) {
+            res.status(400).json({ success: false, message: 'Erreur lors du changement de statut de l\'exercice', error });
+        }
+    }
+
     async deleteExercice(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;
