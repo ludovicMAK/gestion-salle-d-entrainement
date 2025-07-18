@@ -17,7 +17,7 @@ export class UserController {
         try {
             const user = await this.userService.createUser({
                 email: req.body.email,
-                role: UserRole.EMPLOYEE,
+                role: UserRole.USER,
                 password: req.body.password,
                 lastName: req.body.lastName,
                 firstName: req.body.firstName
@@ -30,13 +30,13 @@ export class UserController {
 
     async promoteUser(req: Request, res: Response) {
         const userId = req.params.id;
-        await this.userService.updateRole(userId, UserRole.ADMIN);
+        await this.userService.updateRole(userId, UserRole.OWNER);
         res.status(204).end();
     }
 
     async demoteUser(req: Request, res: Response) {
         const userId = req.params.id;
-        await this.userService.updateRole(userId, UserRole.EMPLOYEE);
+        await this.userService.updateRole(userId, UserRole.USER);
         res.status(204).end();
     }
 
@@ -117,21 +117,5 @@ export class UserController {
         }
     }
 
-    buildRouter(): Router {
-        const router = Router();
-        router.post('/',
-            sessionMiddleware(this.sessionService),
-            roleMiddleware(UserRole.EMPLOYEE),
-            json(),
-            this.createUser.bind(this));
-        router.patch('/:id/promote',
-            sessionMiddleware(this.sessionService),
-            roleMiddleware(UserRole.ADMIN),
-            this.promoteUser.bind(this));
-        router.patch('/:id/demote',
-            sessionMiddleware(this.sessionService),
-            roleMiddleware(UserRole.ADMIN),
-            this.demoteUser.bind(this));
-        return router;
-    }
+    
 }

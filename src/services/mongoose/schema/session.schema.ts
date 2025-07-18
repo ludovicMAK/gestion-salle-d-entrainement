@@ -3,6 +3,11 @@ import { Session } from "../../../models";
 
 export function sessionSchema(): Schema<Session> {
     return new Schema<Session>({
+        token: {
+            type: String,
+            required: true,
+            unique: true
+        },
         expirationDate: {
             type: Date,
         },

@@ -24,6 +24,7 @@ import {
     BadgeController
 } from './controllers';
 import { salleSchema, exerciceSchema, exerciceTypeSchema, defiSchema, seanceEntrainementSchema, suiviDefiSchema, badgeSchema } from './services/mongoose/schema';
+import { userSchema } from "./services/mongoose/schema";
 
 class App {
     public app: express.Application;
@@ -48,6 +49,7 @@ class App {
         const SeanceModel = mongoose.models.SeanceEntrainement || mongoose.model('SeanceEntrainement', seanceEntrainementSchema());
         const SuiviDefiModel = mongoose.models.SuiviDefi || mongoose.model('SuiviDefi', suiviDefiSchema());
         const BadgeModel = mongoose.models.Badge || mongoose.model('Badge', badgeSchema());
+        const UserModel = mongoose.models.User || mongoose.model("User", userSchema());
 
         // Initialize services
         const userService = new UserService(mongoose);
@@ -81,7 +83,8 @@ class App {
             suiviDefiController,
             badgeController,
             userController,
-            authController
+            authController,
+            sessionService
         });
 
         // Use routes
