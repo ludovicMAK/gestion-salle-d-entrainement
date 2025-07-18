@@ -10,6 +10,7 @@ import {
     UserController,
     AuthController
 } from '../controllers';
+import { SessionService } from '../services/mongoose/services';
 
 import { salleRoutes } from './salle.routes';
 import { exerciceRoutes } from './exercice.routes';
@@ -30,6 +31,7 @@ interface Controllers {
     badgeController: BadgeController;
     userController: UserController;
     authController: AuthController;
+    sessionService: SessionService;
 }
 
 export const createRoutes = (controllers: Controllers): Router => {
@@ -39,7 +41,7 @@ export const createRoutes = (controllers: Controllers): Router => {
     const apiRouter = Router();
 
     // Authentication routes
-    apiRouter.use('/auth', authRoutes(controllers.authController));
+    apiRouter.use('/auth', authRoutes(controllers.authController, controllers.sessionService));
 
     // Resource routes
     apiRouter.use('/salles', salleRoutes(controllers.salleController));

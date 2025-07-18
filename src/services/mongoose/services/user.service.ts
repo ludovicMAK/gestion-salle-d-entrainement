@@ -15,13 +15,19 @@ export class UserService {
         this.userModel = connection.models.User || connection.model('User', userSchema());
     }
 
-    async findUser(email: string, password?: string): Promise<User | null> {
-        const filter: FilterQuery<User> = {email: email};
-        if(password) {
+   async findUser(email: string, password?: string): Promise<Omit<User, 'password'> | null> {
+        const filter: FilterQuery<User> = { email };
+        if (password) {
             filter.password = sha256(password);
         }
-        return this.userModel.findOne(filter);
+
+        const userDoc = await this.userModel.findOne(filter);
+        if (!userDoc) return null;
+
+        const { password: _, ...userSansPassword } = userDoc.toObject();
+        return userSansPassword;
     }
+
 
     async createUser(user: CreateUser): Promise<User> {
         if (!user.password) {
