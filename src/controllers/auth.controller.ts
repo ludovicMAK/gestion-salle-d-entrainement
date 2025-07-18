@@ -1,6 +1,6 @@
-import {UserService} from "../services/mongoose";
+import {UserService} from "../services/mongoose/services";
 import {Router, Request, Response, json} from "express";
-import {SessionService} from "../services/mongoose";
+import {SessionService} from "../services/mongoose/services";
 import {sessionMiddleware} from "../middlewares";
 
 export class AuthController {

@@ -1,6 +1,5 @@
 import { Model, Types } from "mongoose";
 import { Badge } from "../../../models";
-
 export class BadgeService {
     constructor(private badgeModel: Model<Badge>) {}
 

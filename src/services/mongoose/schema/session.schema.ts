@@ -1,5 +1,5 @@
 import {Schema} from "mongoose";
-import {Session} from "../../../models";
+import { Session } from "../../../models";
 
 export function sessionSchema(): Schema<Session> {
     return new Schema<Session>({

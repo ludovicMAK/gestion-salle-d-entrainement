@@ -1,5 +1,5 @@
 import {Mongoose, Model, isValidObjectId} from "mongoose";
-import {Session} from "../../../models";
+import { Session } from "../../../models";
 import {sessionSchema} from "../schema";
 
 export type CreateSession = Omit<Session, '_id' | 'createdAt' | 'updatedAt'>;

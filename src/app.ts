@@ -1,6 +1,6 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import { createRoutes } from '../routes';
+import { createRoutes } from './routes';
 import { 
     UserService, 
     SessionService, 
@@ -11,7 +11,7 @@ import {
     SeanceEntrainementService,
     SuiviDefiService,
     BadgeService
-} from '../services/mongoose/services';
+} from './services/mongoose/services';
 import { 
     AuthController, 
     UserController,
@@ -22,8 +22,8 @@ import {
     SeanceEntrainementController,
     SuiviDefiController,
     BadgeController
-} from '../controllers';
-import { salleSchema, exerciceSchema, exerciceTypeSchema, defiSchema, seanceEntrainementSchema, suiviDefiSchema, badgeSchema } from '../services/mongoose/schema';
+} from './controllers';
+import { salleSchema, exerciceSchema, exerciceTypeSchema, defiSchema, seanceEntrainementSchema, suiviDefiSchema, badgeSchema } from './services/mongoose/schema';
 
 class App {
     public app: express.Application;

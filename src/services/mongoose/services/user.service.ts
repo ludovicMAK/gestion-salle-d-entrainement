@@ -1,5 +1,5 @@
 import {Mongoose, Model, FilterQuery, isValidObjectId} from "mongoose";
-import {User, UserRole} from "../../../models";
+import { User, UserRole } from "../../../models";
 import {userSchema} from "../schema";
 import {sha256} from "../../../utils";
 

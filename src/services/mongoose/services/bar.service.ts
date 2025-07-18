@@ -1,5 +1,5 @@
 import {Mongoose, Model} from "mongoose";
-import {Bar} from "../../../models";
+import { Bar } from "../../../models";
 import {barSchema} from "../schema";
 
 export type CreateBar = Omit<Bar, '_id' | 'createdAt' | 'updatedAt'>;
