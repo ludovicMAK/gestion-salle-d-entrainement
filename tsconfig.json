@@ -17,7 +17,12 @@
     "allowSyntheticDefaultImports": true
   },
   "include": [
-    "src/**/*"
+    "index.ts",
+    "controllers",
+    "models",
+    "middlewares",
+    "services",
+    "utils"
   ],
   "exclude": [
     "node_modules",

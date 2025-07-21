@@ -117,5 +117,21 @@ export class UserController {
         }
     }
 
-    
+    buildRouter(): Router {
+        const router = Router();
+        router.post('/',
+            sessionMiddleware(this.sessionService),
+            roleMiddleware(UserRole.SUPER_ADMIN),
+            json(),
+            this.createUser.bind(this));
+        router.patch('/:id/promote',
+            sessionMiddleware(this.sessionService),
+            roleMiddleware(UserRole.SUPER_ADMIN),
+            this.promoteUser.bind(this));
+        router.patch('/:id/demote',
+            sessionMiddleware(this.sessionService),
+            roleMiddleware(UserRole.SUPER_ADMIN),
+            this.demoteUser.bind(this));
+        return router;
+    }
 }

@@ -2,7 +2,7 @@ export * from './session.schema';
 export * from './user.schema';
 export * from './bar.schema';
 export * from './address.schema';
-export * from './salle.schema';
+export * from './gym.schema';
 export * from './exercice-type.schema';
 export * from './exercice.schema';
 export * from './badge.schema';

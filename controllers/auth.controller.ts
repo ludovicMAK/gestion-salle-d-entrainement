@@ -2,6 +2,7 @@ import {UserService} from "../services/mongoose/services";
 import {Router, Request, Response, json} from "express";
 import {SessionService} from "../services/mongoose/services";
 import {sessionMiddleware} from "../middlewares";
+import {UserRole} from "../models";
 
 export class AuthController {
   constructor(
@@ -26,10 +27,9 @@ export class AuthController {
     
     const session = await this.sessionService.createSession({
       user: user,
-      expirationDate: new Date(Date.now() + 1_296_000_000), // eq NOW + 15 jours en millis 15 * 86_400 * 1000
+      expirationDate: new Date(Date.now() + 1_296_000_000), 
     });
     
-    // Créer une copie de l'utilisateur sans le mot de passe
     const userSafe = {
       _id: user._id,
       email: user.email,
@@ -43,8 +43,7 @@ export class AuthController {
       updatedAt: user.updatedAt
     };
     
-    // Réponse optimisée pour Postman avec le token facilement accessible
-    res.status(200).json({
+    res.status(201).json({
       success: true,
       message: 'Connexion réussie',
       token: session.token,
@@ -59,7 +58,6 @@ export class AuthController {
       return;
     }
     
-    // Créer une copie de l'utilisateur sans le mot de passe
     const userSafe = {
       _id: req.user._id,
       email: req.user.email,
@@ -75,8 +73,27 @@ export class AuthController {
     
     res.json(userSafe);
   }
-
-  async logout(req: Request, res: Response) {
+  async subscribe(req: Request, res: Response) {
+        if(!req.body || !req.body.email || !req.body.password
+            || !req.body.lastName || !req.body.firstName) {
+            res.status(400).end();
+            return;
+        }
+        try {
+            const user = await this.userService.createUser({
+                email: req.body.email,
+                role: UserRole.USER,
+                password: req.body.password,
+                lastName: req.body.lastName,
+                firstName: req.body.firstName
+            });
+            res.status(201).json(user);
+        } catch {
+            res.status(409).end(); // CONFLICT
+        }
+    }
+  //Todo: Implement logout functionality
+  /*async logout(req: Request, res: Response) {
     try {
       // Récupérer le token de la session depuis les headers
       const token = req.headers.authorization?.replace("Bearer ", "");
@@ -87,7 +104,8 @@ export class AuthController {
     } catch (error) {
       res.status(500).json({ error: "Erreur lors de la déconnexion" });
     }
-  }
+  }*/
+
 
   async register(req: Request, res: Response) {
     try {
@@ -116,15 +134,16 @@ export class AuthController {
       res.status(409).json({ error: "Email déjà utilisé" });
     }
   }
-
-  async listSessions(req: Request, res: Response) {
-    try {
-      const sessions = await this.sessionService.getAllSessions();
-      res.json(sessions);
-    } catch (error) {
-      res
-        .status(500)
-        .json({ error: "Erreur lors de la récupération des sessions" });
+  
+   buildRouter(): Router {
+        const router = Router();
+        router.post('/login', json(), this.login.bind(this));
+        router.post('/register', json(), this.register.bind(this));
+        router.post('/subscribe', json(), this.subscribe.bind(this));
+        router.get('/me',
+            sessionMiddleware(this.sessionService),
+            this.me.bind(this));
+        return router;
     }
-  }
+  
 }
