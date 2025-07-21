@@ -53,11 +53,11 @@ export class GymService {
     }
 
     async approve(id: string | Types.ObjectId): Promise<Gym | null> {
-        return await this.update(id, { approuvee: true });
+        return await this.update(id, { isApproved: true });
     }
 
-    async updateApproval(id: string | Types.ObjectId, approuvee: boolean): Promise<Gym | null> {
-        return await this.update(id, { approuvee });
+    async updateApproval(id: string | Types.ObjectId, isApproved: boolean): Promise<Gym | null> {
+        return await this.update(id, { isApproved });
     }
 
     async searchByEquipments(equipements: string[]): Promise<Gym[]> {

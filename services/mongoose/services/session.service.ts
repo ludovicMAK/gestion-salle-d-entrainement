@@ -1,8 +1,9 @@
 import {Mongoose, Model, isValidObjectId} from "mongoose";
 import { Session } from "../../../models";
 import {sessionSchema} from "../schema";
+import { v4 as uuidv4 } from 'uuid';
 
-export type CreateSession = Omit<Session, '_id' | 'createdAt' | 'updatedAt' | 'token'>;
+export type CreateSession = Omit<Session, '_id' | 'createdAt' | 'updatedAt'>;
 
 export class SessionService {
 
@@ -13,16 +14,16 @@ export class SessionService {
     }
 
     async createSession(session: CreateSession): Promise<Session> {
-        return this.sessionModel.create(session);
+        // Génère un token unique si non fourni
+        const token = session.token || uuidv4();
+        const created = await this.sessionModel.create({ ...session, token });
+        return created.toObject();
     }
 
     async findActiveSession(sessionId: string): Promise<Session | null> {
-        if(!isValidObjectId(sessionId)) {
-            return null;
-        }
-        const session = this.sessionModel.findOne({
-            _id: sessionId,
-        }).populate('user'); // populate permet de charger un objet d'une autre collection a partir de son id
+        const session = await this.sessionModel.findOne({
+            token: sessionId,
+        }).populate('user');
         return session;
     }
 }

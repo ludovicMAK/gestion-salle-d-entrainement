@@ -1,5 +1,4 @@
 import { Types } from 'mongoose';
-import { NiveauExercice } from './exercice-type.interface';
 
 export interface ExerciceSeance {
     exercice: Types.ObjectId;
@@ -19,7 +18,6 @@ export interface SeanceEntrainement {
     caloriesBrulees: number;
     exercices: ExerciceSeance[];
     description?: string;
-    niveau?: NiveauExercice;
     defi?: Types.ObjectId;
     notes?: string;
     createdAt?: Date;

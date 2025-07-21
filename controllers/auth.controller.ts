@@ -3,6 +3,7 @@ import {Router, Request, Response, json} from "express";
 import {SessionService} from "../services/mongoose/services";
 import {sessionMiddleware} from "../middlewares";
 import {UserRole} from "../models";
+import test from "node:test";
 
 export class AuthController {
   constructor(
@@ -40,7 +41,7 @@ export class AuthController {
       score: user.score,
       badges: user.badges,
       createdAt: user.createdAt,
-      updatedAt: user.updatedAt
+      updatedAt: user.updatedAt,
     };
     
     res.status(201).json({
@@ -48,7 +49,7 @@ export class AuthController {
       message: 'Connexion réussie',
       token: session.token,
       user: userSafe,
-      expiresAt: session.expirationDate
+      expiresAt: session.expirationDate,
     });
   }
 

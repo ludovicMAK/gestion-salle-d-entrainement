@@ -6,6 +6,41 @@ import {UserRole} from "../models";
 import { Types } from 'mongoose';
 
 export class GymController {
+    async removeEquipment(req: Request, res: Response): Promise<void> {
+        try {
+            const { id, equipmentId } = req.params;
+            // Récupère la salle
+            const gym = await this.gymService.findById(id);
+            if (!gym) {
+                res.status(404).json({ success: false, message: "Gym non trouvé" });
+                return;
+            }
+            // Filtre l'équipement à retirer
+            const updatedEquipments = gym.equipments.filter((eq: any) => eq.toString() !== equipmentId);
+            const updatedGym = await this.gymService.update(id, { equipments: updatedEquipments });
+            res.json({ success: true, data: updatedGym, message: "Équipement retiré avec succès" });
+        } catch (error) {
+            res.status(400).json({ success: false, message: "Erreur lors du retrait de l'équipement", error });
+        }
+    }
+    async updateEquipments(req: Request, res: Response): Promise<void> {
+        try {
+            const { id } = req.params;
+            const { equipments } = req.body;
+            if (!Array.isArray(equipments)) {
+                res.status(400).json({ success: false, message: "Le champ 'equipments' doit être un tableau" });
+                return;
+            }
+            const gym = await this.gymService.update(id, { equipments });
+            if (!gym) {
+                res.status(404).json({ success: false, message: "Gym non trouvé" });
+                return;
+            }
+            res.json({ success: true, data: gym, message: "Équipements mis à jour avec succès" });
+        } catch (error) {
+            res.status(400).json({ success: false, message: "Erreur lors de la mise à jour des équipements", error });
+        }
+    }
     constructor(private gymService: GymService, private sessionService: SessionService, private userService: UserService) {}
 
     async createGym(req: Request, res: Response): Promise<void> {
@@ -146,29 +181,42 @@ export class GymController {
             res.status(500).json({ success: false, message: 'Erreur lors de la suppression du gym', error });
         }
     }
+    
+
+
+    
     buildRouter(): Router {
             const router = Router();
-            router.post('/create',
+            router.post('/admin/gyms',
                 sessionMiddleware(this.sessionService),
                 roleMiddleware(UserRole.SUPER_ADMIN),
                 json(),
                 this.createGym.bind(this));
-            router.put('/update/:id',
+            router.put('/admin/gyms/:id',
                 sessionMiddleware(this.sessionService),
                 roleMiddleware(UserRole.SUPER_ADMIN),
                 this.updateGym.bind(this));
-            router.delete('/delete/:id',
+            router.delete('/admin/gyms/:id',
                 sessionMiddleware(this.sessionService),
                 roleMiddleware(UserRole.SUPER_ADMIN),
                 this.deleteGym.bind(this));
-            router.get('/list',
+            router.get('/admin/gyms',
                 sessionMiddleware(this.sessionService),
                 roleMiddleware(UserRole.SUPER_ADMIN),
                 this.getGyms.bind(this));
-            router.post('/approve/:id',
+            router.post('/admin/gyms/:id/approve',
                 sessionMiddleware(this.sessionService),
                 roleMiddleware(UserRole.SUPER_ADMIN),
                 this.approveGym.bind(this));
+            router.post('/admin/gyms/:id/equipments',
+                sessionMiddleware(this.sessionService),
+                roleMiddleware(UserRole.SUPER_ADMIN),
+                json(),
+                this.updateEquipments.bind(this));
+            router.delete('/admin/gyms/:id/equipments/:equipmentId',
+                sessionMiddleware(this.sessionService),
+                roleMiddleware(UserRole.SUPER_ADMIN),
+                this.removeEquipment.bind(this));
             return router;
         }
 }

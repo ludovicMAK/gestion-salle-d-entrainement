@@ -10,6 +10,10 @@ export function sessionSchema(): Schema<Session> {
             type: Schema.Types.ObjectId,
             ref: 'User', // nom du model à charger
             required: true
+        },
+        token: {
+            type: String,
+            required: true
         }
     }, {
         timestamps: true, // createdAt + updatedAt

@@ -1,7 +1,6 @@
 export * from './user.interface';
 export * from './gym.interface';
 export * from './exerciseType.interface';
-export * from './exercice-type.interface';
 export * from './badge.interface';
 export * from './defi.interface';
 export * from './seance-entrainement.interface';
@@ -9,3 +8,4 @@ export * from './suivi-defi.interface';
 export * from './address.interface';
 export * from './session.interface';
 export * from './bar.interface';
+export * from './exerciseType.interface'
