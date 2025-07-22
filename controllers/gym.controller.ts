@@ -6,229 +6,242 @@ import {UserRole} from "../models";
 import { Types } from 'mongoose';
 
 export class GymController {
-    async getPendingGyms(req: Request, res: Response): Promise<void> {
-        try {
-            const gyms = await this.gymService.findAll({ isApproved: false });
-            res.json({ success: true, data: gyms });
-        } catch (error) {
-            res.status(500).json({ success: false, message: 'Erreur lors de la récupération des salles en attente', error });
-        }
+  constructor(
+    public readonly gymService: GymService,
+    public readonly sessionService: SessionService,
+    public readonly userService: UserService
+  ) {}
+
+  async createGym(req: Request, res: Response) {
+    if (!req.body || !req.body.name || !req.body.address) {
+      res.status(400).json({ error: 'Nom et adresse requis' });
+      return;
     }
-    async removeEquipment(req: Request, res: Response): Promise<void> {
-        try {
-            const { id, equipmentId } = req.params;
-            // Récupère la salle
-            const gym = await this.gymService.findById(id);
-            if (!gym) {
-                res.status(404).json({ success: false, message: "Gym non trouvé" });
-                return;
-            }
-            // Filtre l'équipement à retirer
-            const updatedEquipments = gym.equipments.filter((eq: any) => eq.toString() !== equipmentId);
-            const updatedGym = await this.gymService.update(id, { equipments: updatedEquipments });
-            res.json({ success: true, data: updatedGym, message: "Équipement retiré avec succès" });
-        } catch (error) {
-            res.status(400).json({ success: false, message: "Erreur lors du retrait de l'équipement", error });
-        }
-    }
-    async updateEquipments(req: Request, res: Response): Promise<void> {
-        try {
-            const { id } = req.params;
-            const { equipments } = req.body;
-            if (!Array.isArray(equipments)) {
-                res.status(400).json({ success: false, message: "Le champ 'equipments' doit être un tableau" });
-                return;
-            }
-            const gym = await this.gymService.update(id, { equipments });
-            if (!gym) {
-                res.status(404).json({ success: false, message: "Gym non trouvé" });
-                return;
-            }
-            res.json({ success: true, data: gym, message: "Équipements mis à jour avec succès" });
-        } catch (error) {
-            res.status(400).json({ success: false, message: "Erreur lors de la mise à jour des équipements", error });
-        }
-    }
-    constructor(private gymService: GymService, private sessionService: SessionService, private userService: UserService) {}
-
-    async createGym(req: Request, res: Response): Promise<void> {
-        try {
-            const gymData = req.body;
-            const gym = await this.gymService.create(gymData);
-            res.status(201).json({ success: true, data: gym });
-        } catch (error) {
-            res.status(400).json({ success: false, message: 'Erreur lors de la création de la salle', error });
-        }
-    }
-
-    async getSalle(req: Request, res: Response): Promise<void> {
-        try {
-            const { id } = req.params;
-            const gym = await this.gymService.findById(id);
-
-            if (!gym) {
-                res.status(404).json({ success: false, message: 'Gym non trouvé' });
-                return;
-            }
-
-            res.json({ success: true, data: gym });
-        } catch (error) {
-            res.status(500).json({ success: false, message: 'Erreur lors de la récupération de la salle', error });
-        }
-    }
-
-    async getGyms(req: Request, res: Response): Promise<void> {
-        try {
-            const { approved } = req.query;
-            let gyms;
-
-            if (approved === 'true') {
-                gyms = await this.gymService.findApproved();
-            } else {
-                gyms = await this.gymService.findAll();
-            }
-
-            res.json({ success: true, data: gyms });
-        } catch (error) {
-            res.status(500).json({ success: false, message: 'Erreur lors de la récupération des salles', error });
-        }
-    }
-
-    async getSallesByOwner(req: Request, res: Response): Promise<void> {
-        try {
-            const { ownerId } = req.params;
-            const gyms = await this.gymService.findByOwner(ownerId);
-            res.json({ success: true, data: gyms });
-        } catch (error) {
-            res.status(500).json({ success: false, message: 'Erreur lors de la récupération des salles du propriétaire', error });
-        }
-    }
-
-    async searchGymsByEquipments(req: Request, res: Response): Promise<void> {
-        try {
-            const { equipements } = req.body;
-            const gyms = await this.gymService.searchByEquipments(equipements);
-            res.json({ success: true, data: gyms });
-        } catch (error) {
-            res.status(500).json({ success: false, message: 'Erreur lors de la recherche des gyms', error });
-        }
-    }
-
-    async updateGym(req: Request, res: Response): Promise<void> {
-        try {
-            const { id } = req.params;
-            const updateData = req.body;
-            const gym = await this.gymService.update(id, updateData);
-
-            if (!gym) {
-                res.status(404).json({ success: false, message: 'Gym non trouvé' });
-                return;
-            }
-
-            res.json({ success: true, data: gym });
-        } catch (error) {
-            res.status(400).json({ success: false, message: 'Erreur lors de la mise à jour de la salle', error });
-        }
-    }
-
-    async approveGym(req: Request, res: Response): Promise<void> {
-        try {
-            const { id } = req.params;
-            const gym = await this.gymService.approve(id);
-
-            if (!gym) {
-                res.status(404).json({ success: false, message: 'Gym non trouvé' });
-                return;
-            }
-            
-            res.json({ success: true, data: gym, message: 'Salle approuvée avec succès' });
-        } catch (error) {
-            res.status(400).json({ success: false, message: 'Erreur lors de l\'approbation de la salle', error });
-        }
-    }
-
-    async toggleSalleApproval(req: Request, res: Response): Promise<void> {
-        try {
-            const { id } = req.params;
-            const { approuvee } = req.body;
-            
-            if (typeof approuvee !== 'boolean') {
-                res.status(400).json({ success: false, message: 'Le champ approuvee doit être un booléen' });
-                return;
-            }
-
-            const gym = await this.gymService.updateApproval(id, approuvee);
-
-            if (!gym) {
-                res.status(404).json({ success: false, message: 'Gym non trouvé' });
-                return;
-            }
-            
-            res.json({ 
-                success: true, 
-                data: gym, 
-                message: `Gym ${approuvee ? 'approuvé' : 'désapprouvé'} avec succès` 
-            });
-        } catch (error) {
-            res.status(400).json({ success: false, message: 'Erreur lors du changement d\'approbation du gym', error });
-        }
-    }
-
-    async deleteGym(req: Request, res: Response): Promise<void> {
-        try {
-            const { id } = req.params;
-            const gym = await this.gymService.delete(id);
-
-            if (!gym) {
-                res.status(404).json({ success: false, message: 'Gym non trouvé' });
-                return;
-            }
-
-            res.json({ success: true, message: 'Gym supprimé avec succès' });
-        } catch (error) {
-            res.status(500).json({ success: false, message: 'Erreur lors de la suppression du gym', error });
-        }
+    if (!req.user) {
+      res.status(401).json({ error: 'Utilisateur non authentifié' });
+      return;
     }
     
-
-
+    // Déterminer le propriétaire et le statut d'approbation selon le rôle
+    let ownerId: string;
+    let isApproved = false;
+    let message = "";
     
-    buildRouter(): Router {
-            const router = Router();
-            router.post('/admin/gyms',
-                sessionMiddleware(this.sessionService),
-                roleMiddleware(UserRole.SUPER_ADMIN),
-                json(),
-                this.createGym.bind(this));
-            router.put('/admin/gyms/:id',
-                sessionMiddleware(this.sessionService),
-                roleMiddleware(UserRole.SUPER_ADMIN),
-                this.updateGym.bind(this));
-            router.delete('/admin/gyms/:id',
-                sessionMiddleware(this.sessionService),
-                roleMiddleware(UserRole.SUPER_ADMIN),
-                this.deleteGym.bind(this));
-            router.get('/admin/gyms',
-                sessionMiddleware(this.sessionService),
-                roleMiddleware(UserRole.SUPER_ADMIN),
-                this.getGyms.bind(this));
-            router.get('/admin/gyms/pending',
-                sessionMiddleware(this.sessionService),
-                roleMiddleware(UserRole.SUPER_ADMIN),
-                this.getPendingGyms.bind(this));
-            router.post('/admin/gyms/:id/approve',
-                sessionMiddleware(this.sessionService),
-                roleMiddleware(UserRole.SUPER_ADMIN),
-                this.approveGym.bind(this));
-            router.post('/admin/gyms/:id/equipments',
-                sessionMiddleware(this.sessionService),
-                roleMiddleware(UserRole.SUPER_ADMIN),
-                json(),
-                this.updateEquipments.bind(this));
-            router.delete('/admin/gyms/:id/equipments/:equipmentId',
-                sessionMiddleware(this.sessionService),
-                roleMiddleware(UserRole.SUPER_ADMIN),
-                this.removeEquipment.bind(this));
-            return router;
+    if (req.user.role === UserRole.SUPER_ADMIN) {
+      // SUPER_ADMIN peut spécifier un propriétaire ou utiliser son propre ID
+      ownerId = req.body.ownerId || req.user._id?.toString() || "";
+      isApproved = true;
+      message = "Salle créée et approuvée automatiquement";
+      
+      // Si un ownerId est spécifié, vérifier qu'il existe
+      if (req.body.ownerId) {
+        try {
+          const owner = await this.userService.getUser(req.body.ownerId);
+          if (!owner) {
+            res.status(404).json({ error: 'Propriétaire spécifié non trouvé' });
+            return;
+          }
+        } catch (error) {
+          res.status(400).json({ error: 'ID de propriétaire invalide' });
+          return;
         }
+      }
+    } else if (req.user.role === UserRole.OWNER) {
+      // OWNER utilise automatiquement son propre ID
+      ownerId = req.user._id?.toString() || "";
+      isApproved = false;
+      message = "Demande de création de salle soumise, en attente d'approbation";
+    } else {
+      res.status(403).json({ error: 'Seuls les propriétaires et super-admins peuvent créer des salles' });
+      return;
+    }
+    
+    if (!ownerId) {
+      res.status(400).json({ error: 'Impossible de déterminer le propriétaire' });
+      return;
+    }
+    
+    try {
+      const gym = await this.gymService.create({
+        name: req.body.name,
+        description: req.body.description || '',
+        address: req.body.address,
+        phone: req.body.phone || '',
+        email: req.body.email || '',
+        capacity: req.body.capacity || 50,
+        equipments: req.body.equipments || [],
+        exerciseTypes: req.body.exerciseTypes || [],
+        difficultyLevels: req.body.difficultyLevels || [],
+        isApproved: isApproved,
+        owner: new Types.ObjectId(ownerId),
+      });
+      res.status(201).json({ message, gym });
+    } catch (error) {
+      console.error('Erreur création salle:', error);
+      res.status(409).json({ error: 'Erreur lors de la création de la salle', details: error });
+    }
+  }
+
+  async getGyms(req: Request, res: Response) {
+    try {
+      const gyms = await this.gymService.findAll();
+      res.json(gyms);
+    } catch (error) {
+      res.status(500).json({ error: 'Erreur lors de la récupération des salles' });
+    }
+  }
+
+  async getMyGyms(req: Request, res: Response) {
+    try {
+      if (!req.user) {
+        res.status(401).json({ error: 'Utilisateur non authentifié' });
+        return;
+      }
+      
+      const gyms = await this.gymService.findByOwner(req.user._id as string);
+      res.json(gyms);
+    } catch (error) {
+      res.status(500).json({ error: 'Erreur lors de la récupération de vos salles' });
+    }
+  }
+
+  async getPendingGyms(req: Request, res: Response) {
+    try {
+      const pendingGyms = await this.gymService.findAll({ isApproved: false });
+      res.json(pendingGyms);
+    } catch (error) {
+      res.status(500).json({ error: 'Erreur lors de la récupération des salles en attente' });
+    }
+  }
+
+  async getGym(req: Request, res: Response) {
+    try {
+      const gymId = req.params.id;
+      const gym = await this.gymService.findById(gymId);
+      if (!gym) {
+        res.status(404).json({ error: 'Salle non trouvée' });
+        return;
+      }
+      res.json(gym);
+    } catch (error) {
+      res.status(500).json({ error: 'Erreur lors de la récupération de la salle' });
+    }
+  }
+
+  async updateGym(req: Request, res: Response) {
+    try {
+      const gymId = req.params.id;
+      const updateData = req.body;
+      
+      if (!req.user) {
+        res.status(401).json({ error: 'Utilisateur non authentifié' });
+        return;
+      }
+      
+      // Vérifier que la salle existe
+      const gym = await this.gymService.findById(gymId);
+      if (!gym) {
+        res.status(404).json({ error: 'Salle non trouvée' });
+        return;
+      }
+      
+      // Vérifier les permissions
+      if (req.user.role !== UserRole.SUPER_ADMIN && gym.owner.toString() !== req.user._id?.toString()) {
+        res.status(403).json({ error: 'Accès refusé : vous ne pouvez modifier que vos propres salles' });
+        return;
+      }
+      
+      const updatedGym = await this.gymService.update(gymId, updateData);
+      res.json(updatedGym);
+    } catch (error) {
+      res.status(500).json({ error: 'Erreur lors de la mise à jour de la salle' });
+    }
+  }
+
+  async deleteGym(req: Request, res: Response) {
+    try {
+      const gymId = req.params.id;
+      
+      if (!req.user) {
+        res.status(401).json({ error: 'Utilisateur non authentifié' });
+        return;
+      }
+      
+      // Vérifier que la salle existe
+      const gym = await this.gymService.findById(gymId);
+      if (!gym) {
+        res.status(404).json({ error: 'Salle non trouvée' });
+        return;
+      }
+      
+      // Vérifier les permissions
+      if (req.user.role !== UserRole.SUPER_ADMIN && gym.owner.toString() !== req.user._id?.toString()) {
+        res.status(403).json({ error: 'Accès refusé : vous ne pouvez supprimer que vos propres salles' });
+        return;
+      }
+      
+      await this.gymService.delete(gymId);
+      res.status(204).end();
+    } catch (error) {
+      res.status(500).json({ error: 'Erreur lors de la suppression de la salle' });
+    }
+  }
+
+  async approveGym(req: Request, res: Response) {
+    try {
+      const gymId = req.params.id;
+      const gym = await this.gymService.approve(gymId);
+      if (!gym) {
+        res.status(404).json({ error: 'Salle non trouvée' });
+        return;
+      }
+      res.json({ message: 'Salle approuvée', gym });
+    } catch (error) {
+      res.status(500).json({ error: 'Erreur lors de l\'approbation de la salle' });
+    }
+  }
+
+  buildRouter(): Router {
+    const router = Router();
+    
+    // Routes publiques
+    router.get('/gyms', this.getGyms.bind(this));
+    router.get('/gyms/:id', this.getGym.bind(this));
+    
+    // Routes pour OWNER et SUPER_ADMIN (création de salles)
+    router.post('/gyms',
+      sessionMiddleware(this.sessionService),
+      roleMiddleware(UserRole.OWNER),
+      json(),
+      this.createGym.bind(this));
+    
+    // Route pour voir ses propres salles (OWNER et SUPER_ADMIN)
+    router.get('/my-gyms',
+      sessionMiddleware(this.sessionService),
+      roleMiddleware(UserRole.OWNER),
+      this.getMyGyms.bind(this));
+    
+    // Routes pour OWNER (gestion de ses propres salles) et SUPER_ADMIN (toutes les salles)
+    router.put('/gyms/:id',
+      sessionMiddleware(this.sessionService),
+      roleMiddleware(UserRole.OWNER),
+      json(),
+      this.updateGym.bind(this));
+    router.delete('/gyms/:id',
+      sessionMiddleware(this.sessionService),
+      roleMiddleware(UserRole.OWNER),
+      this.deleteGym.bind(this));
+    
+    // Routes SUPER_ADMIN uniquement
+    router.get('/admin/gyms/pending',
+      sessionMiddleware(this.sessionService),
+      roleMiddleware(UserRole.SUPER_ADMIN),
+      this.getPendingGyms.bind(this));
+    router.post('/admin/gyms/:id/approve',
+      sessionMiddleware(this.sessionService),
+      roleMiddleware(UserRole.SUPER_ADMIN),
+      this.approveGym.bind(this));
+    
+    return router;
+  }
 }

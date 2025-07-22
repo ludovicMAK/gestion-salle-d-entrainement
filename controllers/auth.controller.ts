@@ -60,7 +60,7 @@ export class AuthController {
       if (token) {
         await this.sessionService.deleteSession(token);
       }
-      res.status(204).json({ message: "Déconnexion réussie" });
+      res.status(200).json({ message: "Déconnexion réussie" });
     } catch (error) {
       res.status(500).json({ error: "Erreur lors de la déconnexion" });
     }
@@ -111,19 +111,7 @@ export class AuthController {
       res.status(409).end(); // CONFLICT
     }
   }
-  //Todo: Implement logout functionality
-  /*async logout(req: Request, res: Response) {
-    try {
-      // Récupérer le token de la session depuis les headers
-      const token = req.headers.authorization?.replace("Bearer ", "");
-      if (token) {
-        await this.sessionService.deleteSession(token);
-      }
-      res.status(204).json({ message: "Déconnexion réussie" });
-    } catch (error) {
-      res.status(500).json({ error: "Erreur lors de la déconnexion" });
-    }
-  }*/
+
 
   async register(req: Request, res: Response) {
     try {

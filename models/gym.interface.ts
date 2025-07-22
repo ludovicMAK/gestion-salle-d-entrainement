@@ -6,7 +6,6 @@ import { ExerciseType } from './exerciseType.interface';
 import { DifficultyLevel } from './difficultyLevel.interface';
 
 export interface Gym extends Timestamps {
-    id: number;
   name: string;
   description?: string;
   address: string;
@@ -20,7 +19,7 @@ export interface Gym extends Timestamps {
   difficultyLevels: DifficultyLevel[]; 
   isApproved: boolean;
 
-  owner: User;                        
+  owner: User | Types.ObjectId;                        
 
   createdAt: Date;
   updatedAt: Date;

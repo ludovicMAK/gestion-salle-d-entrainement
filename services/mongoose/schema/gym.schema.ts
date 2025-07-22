@@ -3,7 +3,6 @@ import { Gym } from "../../../models";
 
 export function gymSchema(): Schema<Gym> {
     return new Schema<Gym>({
-        id: { type: Number, required: true, unique: true },
         name: { type: String, required: true },
         description: { type: String, default: '' },
         address: { type: String, required: true },
@@ -13,7 +12,7 @@ export function gymSchema(): Schema<Gym> {
 
         equipments: [{ type: Schema.Types.ObjectId, ref: 'Equipment' }],
         exerciseTypes: [{ type: Schema.Types.ObjectId, ref: 'ExerciseType' }],
-        difficultyLevels: [{ type: String, enum: ['beginner', 'intermediate', 'advanced'] }],
+        difficultyLevels: [{ type: String, enum: ['beginner', 'intermediate', 'advanced', 'Débutant', 'Intermédiaire', 'Avancé'] }],
         isApproved: { type: Boolean, default: false },
 
         owner: { type: Schema.Types.ObjectId, ref: 'User', required: true },
