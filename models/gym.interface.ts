@@ -6,22 +6,17 @@ import { ExerciseType } from './exerciseType.interface';
 import { DifficultyLevel } from './difficultyLevel.interface';
 
 export interface Gym extends Timestamps {
-    id: number;
   name: string;
   description?: string;
   address: string;
   phone?: string;
   email?: string;
   capacity: number;
-
-  equipments: Equipment[];             
-  exerciseTypes: ExerciseType[];       
-
-  difficultyLevels: DifficultyLevel[]; 
+  equipments: Equipment[] | Types.ObjectId[];
+  exerciseTypes: ExerciseType[] | Types.ObjectId[];
+  difficultyLevels: DifficultyLevel[];
   isApproved: boolean;
-
-  owner: User;                        
-
+  owner: User | Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }

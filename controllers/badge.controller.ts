@@ -1,8 +1,13 @@
-import { Request, Response } from 'express';
-import { BadgeService } from '../services/mongoose/services';
+import { Request, Response, Router, json } from 'express';
+import { BadgeService, SessionService } from '../services/mongoose/services';
+import { sessionMiddleware, roleMiddleware } from '../middlewares';
+import { UserRole } from '../models';
 
 export class BadgeController {
-    constructor(private badgeService: BadgeService) {}
+    constructor(
+        private badgeService: BadgeService,
+        private sessionService: SessionService
+    ) {}
 
     async createBadge(req: Request, res: Response): Promise<void> {
         try {
@@ -80,5 +85,32 @@ export class BadgeController {
         } catch (error) {
             res.status(500).json({ success: false, message: 'Erreur lors de la suppression du badge', error });
         }
+    }
+
+    buildRouter(): Router {
+        const router = Router();
+        
+        // Routes publiques
+        router.get('/badges', this.getBadges.bind(this));
+        router.get('/badges/:id', this.getBadge.bind(this));
+        router.get('/badges/points/:minPoints', this.getBadgesByPoints.bind(this));
+        
+        // Routes admin (SUPER_ADMIN uniquement)
+        router.post('/admin/badges',
+            sessionMiddleware(this.sessionService),
+            roleMiddleware(UserRole.SUPER_ADMIN),
+            json(),
+            this.createBadge.bind(this));
+        router.put('/admin/badges/:id',
+            sessionMiddleware(this.sessionService),
+            roleMiddleware(UserRole.SUPER_ADMIN),
+            json(),
+            this.updateBadge.bind(this));
+        router.delete('/admin/badges/:id',
+            sessionMiddleware(this.sessionService),
+            roleMiddleware(UserRole.SUPER_ADMIN),
+            this.deleteBadge.bind(this));
+            
+        return router;
     }
 }

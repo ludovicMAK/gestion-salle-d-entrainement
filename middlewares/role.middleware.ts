@@ -9,7 +9,7 @@ export function roleMiddleware(role: UserRole): RequestHandler {
             return;
         }
         if(getUserRoleLevel(req.user.role) < targetRoleLevel) {
-            res.status(403).end(); // FORBIDDEN
+            res.status(403).end();
             return;
         }
         next();
