@@ -23,7 +23,7 @@ async function startAPI() {
     app.use('/', gymController.buildRouter());
     const exerciseTypeController = new ExerciseTypeController(sessionService, exerciseTypeService);
     app.use('/', exerciseTypeController.buildRouter());
-    const equipmentController = new EquipmentController(equipmentService, sessionService);
+    const equipmentController = new EquipmentController(equipmentService, sessionService, userService);
     app.use('/', equipmentController.buildRouter());
     const badgeController = new BadgeController(badgeService, sessionService);
     app.use('/', badgeController.buildRouter());

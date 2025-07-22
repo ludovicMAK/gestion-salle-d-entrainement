@@ -11,38 +11,41 @@ export class GymService {
   }
 
   async create(gym: CreateGym): Promise<Gym> {
-   
     return this.gymModel.create(gym);
   }
 
   async findById(id: string | Types.ObjectId): Promise<Gym | null> {
-    return await this.gymModel
+    return this.gymModel
       .findById(id)
       .populate("owner", "firstName lastName email")
       .populate("exerciseTypes", "name description")
+      .populate("equipments", "name description muscleGroups")
       .exec();
   }
 
   async findAll(filter: Partial<Gym> = {}): Promise<Gym[]> {
-    return await this.gymModel
+    return this.gymModel
       .find(filter)
       .populate("owner", "firstName lastName email")
       .populate("exerciseTypes", "name description")
+      .populate("equipments", "name description muscleGroups")
       .exec();
   }
 
   async findByOwner(ownerId: string | Types.ObjectId): Promise<Gym[]> {
-    return await this.gymModel
+    return this.gymModel
       .find({ owner: ownerId })
       .populate("exerciseTypes", "name description")
+      .populate("equipments", "name description muscleGroups")
       .exec();
   }
 
   async findApproved(): Promise<Gym[]> {
-    return await this.gymModel
+    return this.gymModel
       .find({ isApproved: true })
       .populate("owner", "firstName lastName email")
       .populate("exerciseTypes", "name description")
+      .populate("equipments", "name description muscleGroups")
       .exec();
   }
 
@@ -50,36 +53,64 @@ export class GymService {
     id: string | Types.ObjectId,
     updateData: Partial<Gym>
   ): Promise<Gym | null> {
-    return await this.gymModel
+    return this.gymModel
       .findByIdAndUpdate(id, updateData, { new: true })
       .populate("owner", "firstName lastName email")
       .populate("exerciseTypes", "name description")
+      .populate("equipments", "name description muscleGroups")
       .exec();
   }
 
   async delete(id: string | Types.ObjectId): Promise<Gym | null> {
-    return await this.gymModel.findByIdAndDelete(id).exec();
+    return this.gymModel.findByIdAndDelete(id).exec();
   }
 
   async approve(id: string | Types.ObjectId): Promise<Gym | null> {
-    return await this.update(id, { isApproved: true });
+    return this.update(id, { isApproved: true });
   }
 
   async updateApproval(
     id: string | Types.ObjectId,
     isApproved: boolean
   ): Promise<Gym | null> {
-    return await this.update(id, { isApproved });
+    return this.update(id, { isApproved });
   }
 
   async searchByEquipments(equipements: string[]): Promise<Gym[]> {
-    return await this.gymModel
+    return this.gymModel
       .find({
         equipments: { $in: equipements },
         isApproved: true,
       })
       .populate("owner", "firstName lastName email")
       .populate("exerciseTypes", "name description")
+      .populate("equipments", "name description muscleGroups")
+      .exec();
+  }
+
+  async addEquipmentToGym(gymId: string | Types.ObjectId, equipmentId: string | Types.ObjectId): Promise<Gym | null> {
+    return this.gymModel
+      .findByIdAndUpdate(
+        gymId,
+        { $addToSet: { equipments: equipmentId } },
+        { new: true }
+      )
+      .populate("owner", "firstName lastName email")
+      .populate("exerciseTypes", "name description")
+      .populate("equipments", "name description muscleGroups")
+      .exec();
+  }
+
+  async removeEquipmentFromGym(gymId: string | Types.ObjectId, equipmentId: string | Types.ObjectId): Promise<Gym | null> {
+    return this.gymModel
+      .findByIdAndUpdate(
+        gymId,
+        { $pull: { equipments: equipmentId } },
+        { new: true }
+      )
+      .populate("owner", "firstName lastName email")
+      .populate("exerciseTypes", "name description")
+      .populate("equipments", "name description muscleGroups")
       .exec();
   }
 }

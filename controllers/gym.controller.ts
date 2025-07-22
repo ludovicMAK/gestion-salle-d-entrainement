@@ -22,18 +22,15 @@ export class GymController {
       return;
     }
     
-    // Déterminer le propriétaire et le statut d'approbation selon le rôle
     let ownerId: string;
     let isApproved = false;
     let message = "";
     
     if (req.user.role === UserRole.SUPER_ADMIN) {
-      // SUPER_ADMIN peut spécifier un propriétaire ou utiliser son propre ID
       ownerId = req.body.ownerId || req.user._id?.toString() || "";
       isApproved = true;
       message = "Salle créée et approuvée automatiquement";
       
-      // Si un ownerId est spécifié, vérifier qu'il existe
       if (req.body.ownerId) {
         try {
           const owner = await this.userService.getUser(req.body.ownerId);
@@ -47,7 +44,6 @@ export class GymController {
         }
       }
     } else if (req.user.role === UserRole.OWNER) {
-      // OWNER utilise automatiquement son propre ID
       ownerId = req.user._id?.toString() || "";
       isApproved = false;
       message = "Demande de création de salle soumise, en attente d'approbation";
@@ -138,14 +134,12 @@ export class GymController {
         return;
       }
       
-      // Vérifier que la salle existe
       const gym = await this.gymService.findById(gymId);
       if (!gym) {
         res.status(404).json({ error: 'Salle non trouvée' });
         return;
       }
       
-      // Vérifier les permissions
       if (req.user.role !== UserRole.SUPER_ADMIN && gym.owner.toString() !== req.user._id?.toString()) {
         res.status(403).json({ error: 'Accès refusé : vous ne pouvez modifier que vos propres salles' });
         return;
@@ -167,14 +161,12 @@ export class GymController {
         return;
       }
       
-      // Vérifier que la salle existe
       const gym = await this.gymService.findById(gymId);
       if (!gym) {
         res.status(404).json({ error: 'Salle non trouvée' });
         return;
       }
       
-      // Vérifier les permissions
       if (req.user.role !== UserRole.SUPER_ADMIN && gym.owner.toString() !== req.user._id?.toString()) {
         res.status(403).json({ error: 'Accès refusé : vous ne pouvez supprimer que vos propres salles' });
         return;
@@ -201,27 +193,84 @@ export class GymController {
     }
   }
 
+  async addEquipmentToGym(req: Request, res: Response) {
+    try {
+      const gymId = req.params.id;
+      const equipmentId = req.body.equipmentId;
+
+      if (!equipmentId) {
+        res.status(400).json({ error: 'ID de l\'équipement requis' });
+        return;
+      }
+
+      if (!req.user) {
+        res.status(401).json({ error: 'Utilisateur non authentifié' });
+        return;
+      }
+
+      const gym = await this.gymService.findById(gymId);
+      if (!gym) {
+        res.status(404).json({ error: 'Salle non trouvée' });
+        return;
+      }
+
+      if (req.user.role !== UserRole.SUPER_ADMIN && gym.owner.toString() !== req.user._id?.toString()) {
+        res.status(403).json({ error: 'Accès refusé : vous ne pouvez modifier que vos propres salles' });
+        return;
+      }
+
+      const updatedGym = await this.gymService.addEquipmentToGym(gymId, equipmentId);
+      res.json({ message: 'Équipement ajouté à la salle', gym: updatedGym });
+    } catch (error) {
+      res.status(500).json({ error: 'Erreur lors de l\'ajout de l\'équipement' });
+    }
+  }
+
+  async removeEquipmentFromGym(req: Request, res: Response) {
+    try {
+      const gymId = req.params.id;
+      const equipmentId = req.params.equipmentId;
+
+      if (!req.user) {
+        res.status(401).json({ error: 'Utilisateur non authentifié' });
+        return;
+      }
+
+      const gym = await this.gymService.findById(gymId);
+      if (!gym) {
+        res.status(404).json({ error: 'Salle non trouvée' });
+        return;
+      }
+
+      if (req.user.role !== UserRole.SUPER_ADMIN && gym.owner.toString() !== req.user._id?.toString()) {
+        res.status(403).json({ error: 'Accès refusé : vous ne pouvez modifier que vos propres salles' });
+        return;
+      }
+
+      const updatedGym = await this.gymService.removeEquipmentFromGym(gymId, equipmentId);
+      res.json({ message: 'Équipement retiré de la salle', gym: updatedGym });
+    } catch (error) {
+      res.status(500).json({ error: 'Erreur lors du retrait de l\'équipement' });
+    }
+  }
+
   buildRouter(): Router {
     const router = Router();
     
-    // Routes publiques
     router.get('/gyms', this.getGyms.bind(this));
     router.get('/gyms/:id', this.getGym.bind(this));
     
-    // Routes pour OWNER et SUPER_ADMIN (création de salles)
     router.post('/gyms',
       sessionMiddleware(this.sessionService),
       roleMiddleware(UserRole.OWNER),
       json(),
       this.createGym.bind(this));
     
-    // Route pour voir ses propres salles (OWNER et SUPER_ADMIN)
     router.get('/my-gyms',
       sessionMiddleware(this.sessionService),
       roleMiddleware(UserRole.OWNER),
       this.getMyGyms.bind(this));
     
-    // Routes pour OWNER (gestion de ses propres salles) et SUPER_ADMIN (toutes les salles)
     router.put('/gyms/:id',
       sessionMiddleware(this.sessionService),
       roleMiddleware(UserRole.OWNER),
@@ -232,7 +281,6 @@ export class GymController {
       roleMiddleware(UserRole.OWNER),
       this.deleteGym.bind(this));
     
-    // Routes SUPER_ADMIN uniquement
     router.get('/admin/gyms/pending',
       sessionMiddleware(this.sessionService),
       roleMiddleware(UserRole.SUPER_ADMIN),
@@ -241,6 +289,16 @@ export class GymController {
       sessionMiddleware(this.sessionService),
       roleMiddleware(UserRole.SUPER_ADMIN),
       this.approveGym.bind(this));
+    
+    router.post('/gyms/:id/equipments',
+      sessionMiddleware(this.sessionService),
+      roleMiddleware(UserRole.OWNER),
+      json(),
+      this.addEquipmentToGym.bind(this));
+    router.delete('/gyms/:id/equipments/:equipmentId',
+      sessionMiddleware(this.sessionService),
+      roleMiddleware(UserRole.OWNER),
+      this.removeEquipmentFromGym.bind(this));
     
     return router;
   }

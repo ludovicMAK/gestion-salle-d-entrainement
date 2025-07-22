@@ -1,89 +1,167 @@
-import {SessionService, UserService} from "../services/mongoose";
-import {Request, Response, Router, json} from "express";
-import {roleMiddleware, sessionMiddleware} from "../middlewares";
-import {UserRole} from "../models";
+import { SessionService, UserService } from "../services/mongoose";
+import { Request, Response, Router, json } from "express";
+import { roleMiddleware, sessionMiddleware } from "../middlewares";
+import { UserRole } from "../models";
 import { EquipmentService } from "../services/mongoose/services/equipment.service";
+import { Types } from 'mongoose';
 
 export class EquipmentController {
-    async getEquipmentById(req: Request, res: Response) {
-        const equipmentId = req.params.id;
-        if (!equipmentId) {
-            res.status(400).end();
-            return;
-        }
-        try {
-            const equipment = await this.equipmentService.getEquipmentById(equipmentId);
-            if (!equipment) {
-                res.status(404).json({ error: 'Équipement non trouvé' });
-                return;
-            }
-            res.status(200).json(equipment);
-        } catch (error) {
-            res.status(500).json({ error: 'Erreur lors de la récupération de l\'équipement' });
-        }
-    }
-    constructor(public readonly equipmentService: EquipmentService,
-                public readonly sessionService: SessionService) {
-    }
+    constructor(
+        public readonly equipmentService: EquipmentService,
+        public readonly sessionService: SessionService,
+        public readonly userService: UserService
+    ) {}
+
     async createEquipment(req: Request, res: Response) {
         if (!req.body || !req.body.name || !req.body.muscleGroups) {
-            res.status(400).end();
+            res.status(400).json({ error: 'Nom et groupes musculaires requis' });
             return;
         }
+        if (!req.user) {
+            res.status(401).json({ error: 'Utilisateur non authentifié' });
+            return;
+        }
+
+        let ownerId: string;
+
+        if (req.user.role === UserRole.SUPER_ADMIN) {
+            ownerId = req.body.ownerId || req.user._id?.toString() || "";
+            
+            if (req.body.ownerId) {
+                try {
+                    const owner = await this.userService.getUser(req.body.ownerId);
+                    if (!owner) {
+                        res.status(404).json({ error: 'Propriétaire spécifié non trouvé' });
+                        return;
+                    }
+                } catch (error) {
+                    res.status(400).json({ error: 'ID de propriétaire invalide' });
+                    return;
+                }
+            }
+        } else if (req.user.role === UserRole.OWNER) {
+            ownerId = req.user._id?.toString() || "";
+        } else {
+            res.status(403).json({ error: 'Seuls les propriétaires et super-admins peuvent créer des équipements' });
+            return;
+        }
+
+        if (!ownerId) {
+            res.status(400).json({ error: 'Impossible de déterminer le propriétaire' });
+            return;
+        }
+
         try {
-            const equipment = await this.equipmentService.createEquipment({
+            const equipment = await this.equipmentService.create({
                 name: req.body.name,
-                description: req.body.description,
+                description: req.body.description || '',
                 muscleGroups: req.body.muscleGroups,
+                owner: new Types.ObjectId(ownerId),
+                gym: req.body.gymId ? new Types.ObjectId(req.body.gymId) : undefined,
             });
-            res.status(201).json(equipment);
+            res.status(201).json({ message: 'Équipement créé avec succès', equipment });
         } catch (error) {
-            res.status(409).json({ error: 'Erreur lors de la création de l\'équipement' });
+            console.error('Erreur création équipement:', error);
+            res.status(409).json({ error: 'Erreur lors de la création de l\'équipement', details: error });
         }
     }
 
     async getEquipments(req: Request, res: Response) {
         try {
-            const equipments = await this.equipmentService.getEquipments();
-            res.status(200).json(equipments);
+            const equipments = await this.equipmentService.findAll();
+            res.json(equipments);
         } catch (error) {
             res.status(500).json({ error: 'Erreur lors de la récupération des équipements' });
         }
     }
-    async updateEquipment(req: Request, res: Response) {
-        const equipmentId = req.params.id;
-        const updateData = req.body;
 
-        if (!equipmentId || !updateData) {
-            res.status(400).end();
-            return;
-        }
-
+    async getMyEquipments(req: Request, res: Response) {
         try {
-            const updatedEquipment = await this.equipmentService.updateEquipment(equipmentId, updateData);
-            if (!updatedEquipment) {
+            if (!req.user) {
+                res.status(401).json({ error: 'Utilisateur non authentifié' });
+                return;
+            }
+            
+            const equipments = await this.equipmentService.findByOwner(req.user._id as string);
+            res.json(equipments);
+        } catch (error) {
+            res.status(500).json({ error: 'Erreur lors de la récupération de vos équipements' });
+        }
+    }
+
+    async getEquipmentsByGym(req: Request, res: Response) {
+        try {
+            const gymId = req.params.gymId;
+            const equipments = await this.equipmentService.findByGym(gymId);
+            res.json(equipments);
+        } catch (error) {
+            res.status(500).json({ error: 'Erreur lors de la récupération des équipements de la salle' });
+        }
+    }
+
+    async getEquipment(req: Request, res: Response) {
+        try {
+            const equipmentId = req.params.id;
+            const equipment = await this.equipmentService.findById(equipmentId);
+            if (!equipment) {
                 res.status(404).json({ error: 'Équipement non trouvé' });
                 return;
             }
-            res.status(200).json(updatedEquipment);
+            res.json(equipment);
+        } catch (error) {
+            res.status(500).json({ error: 'Erreur lors de la récupération de l\'équipement' });
+        }
+    }
+
+    async updateEquipment(req: Request, res: Response) {
+        try {
+            const equipmentId = req.params.id;
+            const updateData = req.body;
+            
+            if (!req.user) {
+                res.status(401).json({ error: 'Utilisateur non authentifié' });
+                return;
+            }
+            
+            const equipment = await this.equipmentService.findById(equipmentId);
+            if (!equipment) {
+                res.status(404).json({ error: 'Équipement non trouvé' });
+                return;
+            }
+            
+            if (req.user.role !== UserRole.SUPER_ADMIN && equipment.owner.toString() !== req.user._id?.toString()) {
+                res.status(403).json({ error: 'Accès refusé : vous ne pouvez modifier que vos propres équipements' });
+                return;
+            }
+            
+            const updatedEquipment = await this.equipmentService.update(equipmentId, updateData);
+            res.json(updatedEquipment);
         } catch (error) {
             res.status(500).json({ error: 'Erreur lors de la mise à jour de l\'équipement' });
         }
     }
+
     async deleteEquipment(req: Request, res: Response) {
-        const equipmentId = req.params.id;
-
-        if (!equipmentId) {
-            res.status(400).end();
-            return;
-        }
-
         try {
-            const deletedEquipment = await this.equipmentService.deleteEquipment(equipmentId);
-            if (!deletedEquipment) {
+            const equipmentId = req.params.id;
+            
+            if (!req.user) {
+                res.status(401).json({ error: 'Utilisateur non authentifié' });
+                return;
+            }
+            
+            const equipment = await this.equipmentService.findById(equipmentId);
+            if (!equipment) {
                 res.status(404).json({ error: 'Équipement non trouvé' });
                 return;
             }
+            
+            if (req.user.role !== UserRole.SUPER_ADMIN && equipment.owner.toString() !== req.user._id?.toString()) {
+                res.status(403).json({ error: 'Accès refusé : vous ne pouvez supprimer que vos propres équipements' });
+                return;
+            }
+            
+            await this.equipmentService.delete(equipmentId);
             res.status(204).end();
         } catch (error) {
             res.status(500).json({ error: 'Erreur lors de la suppression de l\'équipement' });
@@ -92,24 +170,33 @@ export class EquipmentController {
 
     buildRouter(): Router {
         const router = Router();
-        // Admin routes
-        router.post('/admin/equipments',
+        
+        router.get('/equipments', this.getEquipments.bind(this));
+        router.get('/equipments/:id', this.getEquipment.bind(this));
+        router.get('/gyms/:gymId/equipments', this.getEquipmentsByGym.bind(this));
+        
+        router.post('/equipments',
             sessionMiddleware(this.sessionService),
-            roleMiddleware(UserRole.SUPER_ADMIN),
+            roleMiddleware(UserRole.OWNER),
             json(),
             this.createEquipment.bind(this));
-        router.put('/admin/equipments/:id',
+        
+        router.get('/my-equipments',
             sessionMiddleware(this.sessionService),
-            roleMiddleware(UserRole.SUPER_ADMIN),
+            roleMiddleware(UserRole.OWNER),
+            this.getMyEquipments.bind(this));
+        
+        router.put('/equipments/:id',
+            sessionMiddleware(this.sessionService),
+            roleMiddleware(UserRole.OWNER),
             json(),
             this.updateEquipment.bind(this));
-        router.delete('/admin/equipments/:id',
+        
+        router.delete('/equipments/:id',
             sessionMiddleware(this.sessionService),
-            roleMiddleware(UserRole.SUPER_ADMIN),
+            roleMiddleware(UserRole.OWNER),
             this.deleteEquipment.bind(this));
-        // Public routes
-        router.get('/equipments', this.getEquipments.bind(this));
-        router.get('/equipments/:id', this.getEquipmentById.bind(this));
+        
         return router;
     }
 }
