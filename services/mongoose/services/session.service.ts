@@ -14,10 +14,17 @@ export class SessionService {
     }
 
     async createSession(session: CreateSession): Promise<Session> {
-        // Génère un token unique si non fourni
+        
         const token = session.token || uuidv4();
         const created = await this.sessionModel.create({ ...session, token });
         return created.toObject();
+    }
+
+    async deleteSession(token: string): Promise<void> {
+        if (!token) {
+            throw new Error('Token is required to delete a session');
+        }
+        await this.sessionModel.deleteOne({ token });
     }
 
     async findActiveSession(sessionId: string): Promise<Session | null> {

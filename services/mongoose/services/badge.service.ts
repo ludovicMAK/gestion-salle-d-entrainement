@@ -1,7 +1,13 @@
-import { Model, Types } from "mongoose";
+import { Model, Types, Mongoose } from "mongoose";
 import { Badge } from "../../../models";
+import { badgeSchema } from "../schema";
+
 export class BadgeService {
-    constructor(private badgeModel: Model<Badge>) {}
+    readonly badgeModel: Model<Badge>;
+
+    constructor(public readonly connection: Mongoose) {
+        this.badgeModel = connection.models.Badge || connection.model('Badge', badgeSchema());
+    }
 
     async create(badgeData: Partial<Badge>): Promise<Badge> {
         const badge = new this.badgeModel(badgeData);
