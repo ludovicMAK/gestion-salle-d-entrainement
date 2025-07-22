@@ -13,7 +13,7 @@ export class ExerciseTypeController {
         try {
             const exerciseType = await this.exerciseTypeService.create(req.body);
             console.log(req.body);
-            res.status(201).json(exerciseType);
+            res.status(200).json(exerciseType);
         } catch (error) {
             res.status(400).json({ error: "Erreur lors de la création du type d'exercice", details: error });
         }

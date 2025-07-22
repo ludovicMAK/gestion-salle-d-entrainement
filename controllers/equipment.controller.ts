@@ -2,9 +2,26 @@ import {SessionService, UserService} from "../services/mongoose";
 import {Request, Response, Router, json} from "express";
 import {roleMiddleware, sessionMiddleware} from "../middlewares";
 import {UserRole} from "../models";
-import { EquipmentService } from "../services/mongoose/services/equipment.services";
+import { EquipmentService } from "../services/mongoose/services/equipment.service";
 
 export class EquipmentController {
+    async getEquipmentById(req: Request, res: Response) {
+        const equipmentId = req.params.id;
+        if (!equipmentId) {
+            res.status(400).end();
+            return;
+        }
+        try {
+            const equipment = await this.equipmentService.getEquipmentById(equipmentId);
+            if (!equipment) {
+                res.status(404).json({ error: 'Équipement non trouvé' });
+                return;
+            }
+            res.status(200).json(equipment);
+        } catch (error) {
+            res.status(500).json({ error: 'Erreur lors de la récupération de l\'équipement' });
+        }
+    }
     constructor(public readonly equipmentService: EquipmentService,
                 public readonly sessionService: SessionService) {
     }
@@ -75,23 +92,24 @@ export class EquipmentController {
 
     buildRouter(): Router {
         const router = Router();
-        router.post('/create',
+        // Admin routes
+        router.post('/admin/equipments',
             sessionMiddleware(this.sessionService),
             roleMiddleware(UserRole.SUPER_ADMIN),
             json(),
             this.createEquipment.bind(this));
-        router.put('/update/:id',
+        router.put('/admin/equipments/:id',
             sessionMiddleware(this.sessionService),
             roleMiddleware(UserRole.SUPER_ADMIN),
+            json(),
             this.updateEquipment.bind(this));
-        router.delete('/delete/:id',
+        router.delete('/admin/equipments/:id',
             sessionMiddleware(this.sessionService),
             roleMiddleware(UserRole.SUPER_ADMIN),
             this.deleteEquipment.bind(this));
-        router.get('/list',
-            sessionMiddleware(this.sessionService),
-            roleMiddleware(UserRole.SUPER_ADMIN),
-            this.getEquipments.bind(this));
+        // Public routes
+        router.get('/equipments', this.getEquipments.bind(this));
+        router.get('/equipments/:id', this.getEquipmentById.bind(this));
         return router;
     }
 }

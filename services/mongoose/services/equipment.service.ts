@@ -34,5 +34,11 @@ export class EquipmentService {
     async getEquipments(): Promise<Equipment[]> {
         return this.equipmentModel.find().sort({ createdAt: -1 });
     }
-    
+    async getEquipmentById(id: string): Promise<Equipment | null> {
+        if (!isValidObjectId(id)) {
+            return null;
+        }
+        return this.equipmentModel.findById(id)
+            .populate('muscleGroups', 'name description');
+    }
 }

@@ -6,6 +6,14 @@ import {UserRole} from "../models";
 import { Types } from 'mongoose';
 
 export class GymController {
+    async getPendingGyms(req: Request, res: Response): Promise<void> {
+        try {
+            const gyms = await this.gymService.findAll({ isApproved: false });
+            res.json({ success: true, data: gyms });
+        } catch (error) {
+            res.status(500).json({ success: false, message: 'Erreur lors de la récupération des salles en attente', error });
+        }
+    }
     async removeEquipment(req: Request, res: Response): Promise<void> {
         try {
             const { id, equipmentId } = req.params;
@@ -204,6 +212,10 @@ export class GymController {
                 sessionMiddleware(this.sessionService),
                 roleMiddleware(UserRole.SUPER_ADMIN),
                 this.getGyms.bind(this));
+            router.get('/admin/gyms/pending',
+                sessionMiddleware(this.sessionService),
+                roleMiddleware(UserRole.SUPER_ADMIN),
+                this.getPendingGyms.bind(this));
             router.post('/admin/gyms/:id/approve',
                 sessionMiddleware(this.sessionService),
                 roleMiddleware(UserRole.SUPER_ADMIN),
