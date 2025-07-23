@@ -57,7 +57,7 @@ export class EquipmentController {
                 description: req.body.description || '',
                 muscleGroups: req.body.muscleGroups,
                 owner: new Types.ObjectId(ownerId),
-                gym: req.body.gymId ? new Types.ObjectId(req.body.gymId) : undefined,
+                gym: req.body.gymId ? new Types.ObjectId(req.body.gymId as string) : undefined,
             });
             res.status(201).json({ message: 'Équipement créé avec succès', equipment });
         } catch (error) {

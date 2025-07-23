@@ -69,8 +69,8 @@ export class ExerciseTypeController {
 
     buildRouter(): Router {
         const router = Router();
-        router.get('/exercise-types', this.getAllExerciseTypes.bind(this));
-        router.get('/exercise-types/:id', this.getExerciseType.bind(this));
+        router.get('/', this.getAllExerciseTypes.bind(this));
+        router.get('/:id', this.getExerciseType.bind(this));
         router.get('/admin/exercise-types',
             sessionMiddleware(this.sessionService),
             roleMiddleware(UserRole.SUPER_ADMIN),
@@ -80,17 +80,17 @@ export class ExerciseTypeController {
             sessionMiddleware(this.sessionService),
             roleMiddleware(UserRole.SUPER_ADMIN),
             this.getExerciseType.bind(this));
-        router.post('/admin/exercise-types',
+        router.post('/',
             sessionMiddleware(this.sessionService),
             roleMiddleware(UserRole.SUPER_ADMIN),
             json(),
             this.createExerciseType.bind(this));
-        router.put('/admin/exercise-types/:id',
+        router.put('/:id',
             sessionMiddleware(this.sessionService),
             roleMiddleware(UserRole.SUPER_ADMIN),
             json(),
             this.updateExerciseType.bind(this));
-        router.delete('/admin/exercise-types/:id',
+        router.delete('/:id',
             sessionMiddleware(this.sessionService),
             roleMiddleware(UserRole.SUPER_ADMIN),
             this.deleteExerciseType.bind(this));

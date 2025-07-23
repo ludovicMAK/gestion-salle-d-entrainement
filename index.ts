@@ -22,11 +22,11 @@ async function startAPI() {
     const gymController = new GymController(gymService, sessionService, userService);
     app.use('/', gymController.buildRouter());
     const exerciseTypeController = new ExerciseTypeController(sessionService, exerciseTypeService);
-    app.use('/', exerciseTypeController.buildRouter());
+    app.use('/exercice-types', exerciseTypeController.buildRouter());
     const equipmentController = new EquipmentController(equipmentService, sessionService, userService);
     app.use('/equipments', equipmentController.buildRouter());
     const badgeController = new BadgeController(badgeService, sessionService);
-    app.use('/', badgeController.buildRouter());
+    app.use('/badges', badgeController.buildRouter());
     app.listen(process.env.PORT, () => console.log(`API listening on port ${process.env.PORT}...`))
 }
 
