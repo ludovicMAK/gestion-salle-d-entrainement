@@ -92,9 +92,14 @@ export class EquipmentController {
     async getEquipmentsByGym(req: Request, res: Response) {
         try {
             const gymId = req.params.gymId;
+            if (!gymId || !Types.ObjectId.isValid(gymId)) {
+                res.status(400).json({ error: 'ID de salle invalide' });
+                return;
+            }
             const equipments = await this.equipmentService.findByGym(gymId);
             res.json(equipments);
         } catch (error) {
+            console.log(error)
             res.status(500).json({ error: 'Erreur lors de la récupération des équipements de la salle' });
         }
     }
@@ -129,7 +134,7 @@ export class EquipmentController {
                 return;
             }
             
-            if (req.user.role !== UserRole.SUPER_ADMIN && equipment.owner.toString() !== req.user._id?.toString()) {
+            if (req.user.role !== UserRole.SUPER_ADMIN && equipment.owner._id?.toString() !== req.user._id?.toString()) {
                 res.status(403).json({ error: 'Accès refusé : vous ne pouvez modifier que vos propres équipements' });
                 return;
             }
@@ -151,12 +156,13 @@ export class EquipmentController {
             }
             
             const equipment = await this.equipmentService.findById(equipmentId);
+
             if (!equipment) {
                 res.status(404).json({ error: 'Équipement non trouvé' });
                 return;
             }
             
-            if (req.user.role !== UserRole.SUPER_ADMIN && equipment.owner.toString() !== req.user._id?.toString()) {
+            if (req.user.role !== UserRole.SUPER_ADMIN && equipment.owner._id?.toString() !== req.user._id?.toString()) {
                 res.status(403).json({ error: 'Accès refusé : vous ne pouvez supprimer que vos propres équipements' });
                 return;
             }
@@ -171,31 +177,32 @@ export class EquipmentController {
     buildRouter(): Router {
         const router = Router();
         
-        router.get('/equipments', this.getEquipments.bind(this));
-        router.get('/equipments/:id', this.getEquipment.bind(this));
-        router.get('/gyms/:gymId/equipments', this.getEquipmentsByGym.bind(this));
-        
-        router.post('/equipments',
-            sessionMiddleware(this.sessionService),
-            roleMiddleware(UserRole.OWNER),
-            json(),
-            this.createEquipment.bind(this));
-        
+        router.get('/', this.getEquipments.bind(this));
         router.get('/my-equipments',
             sessionMiddleware(this.sessionService),
             roleMiddleware(UserRole.OWNER),
             this.getMyEquipments.bind(this));
         
-        router.put('/equipments/:id',
+        router.get('/gyms/:gymId/equipments', this.getEquipmentsByGym.bind(this));
+        
+        router.post('/',
+            sessionMiddleware(this.sessionService),
+            roleMiddleware(UserRole.OWNER),
+            json(),
+            this.createEquipment.bind(this));
+        
+        
+        router.put('/:id',
             sessionMiddleware(this.sessionService),
             roleMiddleware(UserRole.OWNER),
             json(),
             this.updateEquipment.bind(this));
         
-        router.delete('/equipments/:id',
+        router.delete('/:id',
             sessionMiddleware(this.sessionService),
             roleMiddleware(UserRole.OWNER),
             this.deleteEquipment.bind(this));
+        router.get('/:id', this.getEquipment.bind(this));
         
         return router;
     }

@@ -140,7 +140,7 @@ export class GymController {
         return;
       }
       
-      if (req.user.role !== UserRole.SUPER_ADMIN && gym.owner.toString() !== req.user._id?.toString()) {
+      if (req.user.role !== UserRole.SUPER_ADMIN && gym.owner._id?.toString() !== req.user._id?.toString()) {
         res.status(403).json({ error: 'Accès refusé : vous ne pouvez modifier que vos propres salles' });
         return;
       }
@@ -167,7 +167,7 @@ export class GymController {
         return;
       }
       
-      if (req.user.role !== UserRole.SUPER_ADMIN && gym.owner.toString() !== req.user._id?.toString()) {
+      if (req.user.role !== UserRole.SUPER_ADMIN && gym.owner._id?.toString() !== req.user._id?.toString()) {
         res.status(403).json({ error: 'Accès refusé : vous ne pouvez supprimer que vos propres salles' });
         return;
       }
@@ -214,7 +214,7 @@ export class GymController {
         return;
       }
 
-      if (req.user.role !== UserRole.SUPER_ADMIN && gym.owner.toString() !== req.user._id?.toString()) {
+      if (req.user.role !== UserRole.SUPER_ADMIN && gym.owner._id?.toString() !== req.user._id?.toString()) {
         res.status(403).json({ error: 'Accès refusé : vous ne pouvez modifier que vos propres salles' });
         return;
       }
@@ -242,7 +242,7 @@ export class GymController {
         return;
       }
 
-      if (req.user.role !== UserRole.SUPER_ADMIN && gym.owner.toString() !== req.user._id?.toString()) {
+      if (req.user.role !== UserRole.SUPER_ADMIN && gym.owner._id?.toString() !== req.user._id?.toString()) {
         res.status(403).json({ error: 'Accès refusé : vous ne pouvez modifier que vos propres salles' });
         return;
       }

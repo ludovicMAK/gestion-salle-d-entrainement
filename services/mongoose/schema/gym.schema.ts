@@ -19,7 +19,7 @@ export function gymSchema(): Schema<Gym> {
         owner: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     }, {
         timestamps: true,
-        collection: "salles",
+        collection: "gym",
         versionKey: false,
     });
 }

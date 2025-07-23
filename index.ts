@@ -24,7 +24,7 @@ async function startAPI() {
     const exerciseTypeController = new ExerciseTypeController(sessionService, exerciseTypeService);
     app.use('/', exerciseTypeController.buildRouter());
     const equipmentController = new EquipmentController(equipmentService, sessionService, userService);
-    app.use('/', equipmentController.buildRouter());
+    app.use('/equipments', equipmentController.buildRouter());
     const badgeController = new BadgeController(badgeService, sessionService);
     app.use('/', badgeController.buildRouter());
     app.listen(process.env.PORT, () => console.log(`API listening on port ${process.env.PORT}...`))

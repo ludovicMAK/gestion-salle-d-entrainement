@@ -58,4 +58,5 @@ export class EquipmentService {
         }
         return this.equipmentModel.findByIdAndDelete(id);
     }
+    
 }
