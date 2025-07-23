@@ -87,6 +87,15 @@ export class GymController {
     }
   }
 
+  async getApprovedGyms(req: Request, res: Response) {
+    try {
+      const approvedGyms = await this.gymService.findAll({ isApproved: true });
+      res.json(approvedGyms);
+    } catch (error) {
+      res.status(500).json({ error: 'Erreur lors de la récupération des salles approuvées' });
+    }
+  }
+
   async getMyGyms(req: Request, res: Response) {
     try {
       if (!req.user) {
@@ -258,6 +267,7 @@ export class GymController {
     const router = Router();
     
     router.get('/gyms', this.getGyms.bind(this));
+    router.get('/gyms/approved', this.getApprovedGyms.bind(this)); // Route publique pour les salles approuvées
     router.get('/gyms/:id', this.getGym.bind(this));
     
     router.post('/gyms',

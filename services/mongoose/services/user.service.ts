@@ -33,6 +33,21 @@ export class UserService {
         if (!user.password) {
             throw new Error('Password is required');
         }
+        
+        // Vérifier que la salle existe si c'est un utilisateur normal
+        if (user.role === UserRole.USER && user.gym) {
+            if (!isValidObjectId(user.gym as string)) {
+                throw new Error('Invalid gym ID');
+            }
+            const gym = await this.connection.models.Gym.findById(user.gym);
+            if (!gym) {
+                throw new Error('Gym not found');
+            }
+            if (!gym.isApproved) {
+                throw new Error('Cannot register to an unapproved gym');
+            }
+        }
+        
         return this.userModel.create({...user, password: sha256(user.password)});
     }
 
@@ -48,14 +63,33 @@ export class UserService {
     }
 
     async getUsers(): Promise<User[]> {
-        return this.userModel.find().sort({ createdAt: -1 });
+        return this.userModel.find().populate('gym', 'name address').sort({ createdAt: -1 });
+    }
+
+    async getUsersByGym(gymId: string): Promise<User[]> {
+        if(!isValidObjectId(gymId)) {
+            return [];
+        }
+        return this.userModel.find({ gym: gymId }).populate('gym', 'name address').sort({ createdAt: -1 });
+    }
+
+    async getUsersByOwner(ownerId: string): Promise<User[]> {
+        if(!isValidObjectId(ownerId)) {
+            return [];
+        }
+        // Trouver d'abord toutes les salles appartenant au propriétaire
+        const gyms = await this.connection.models.Gym.find({ owner: ownerId });
+        const gymIds = gyms.map(gym => gym._id);
+        
+        // Ensuite trouver tous les utilisateurs inscrits à ces salles
+        return this.userModel.find({ gym: { $in: gymIds } }).populate('gym', 'name address').sort({ createdAt: -1 });
     }
 
     async getUser(userId: string): Promise<User | null> {
         if(!isValidObjectId(userId)) {
             return null;
         }
-        return this.userModel.findById(userId);
+        return this.userModel.findById(userId).populate('gym', 'name address');
     }
 
     async updateUser(userId: string, updateData: Partial<User>): Promise<User | null> {
