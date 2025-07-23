@@ -93,9 +93,10 @@ export class AuthController {
       !req.body.email ||
       !req.body.password ||
       !req.body.lastName ||
-      !req.body.firstName
+      !req.body.firstName ||
+      !req.body.gymId
     ) {
-      res.status(400).end();
+      res.status(400).json({ error: "Email, mot de passe, nom, prénom et ID de salle requis" });
       return;
     }
     try {
@@ -105,10 +106,20 @@ export class AuthController {
         password: req.body.password,
         lastName: req.body.lastName,
         firstName: req.body.firstName,
+        gym: req.body.gymId,
       });
-      res.status(201).json(user);
-    } catch {
-      res.status(409).end(); // CONFLICT
+      res.status(201).json({ message: "Inscription réussie", user });
+    } catch (error: any) {
+      console.error('Erreur inscription:', error);
+      if (error.message === 'Gym not found') {
+        res.status(404).json({ error: 'Salle non trouvée' });
+      } else if (error.message === 'Cannot register to an unapproved gym') {
+        res.status(400).json({ error: 'Impossible de s\'inscrire à une salle non approuvée' });
+      } else if (error.message === 'Invalid gym ID') {
+        res.status(400).json({ error: 'ID de salle invalide' });
+      } else {
+        res.status(409).json({ error: 'Email déjà utilisé' });
+      }
     }
   }
 
@@ -126,18 +137,34 @@ export class AuthController {
         return;
       }
 
+      // Si c'est un utilisateur normal, la salle est obligatoire
+      if ((!req.body.role || req.body.role === UserRole.USER) && !req.body.gymId) {
+        res.status(400).json({ error: "ID de la salle requis pour l'inscription d'un utilisateur" });
+        return;
+      }
+
       const user = await this.userService.createUser({
         email: req.body.email,
         password: req.body.password,
         firstName: req.body.firstName,
         lastName: req.body.lastName,
-        role: req.body.role || "USER",
+        role: req.body.role || UserRole.USER,
         actif: true,
+        gym: req.body.gymId,
       });
 
-      res.status(201).json(user);
-    } catch (error) {
-      res.status(409).json({ error: "Email déjà utilisé" });
+      res.status(201).json({ message: "Inscription réussie", user });
+    } catch (error: any) {
+      console.error('Erreur inscription:', error);
+      if (error.message === 'Gym not found') {
+        res.status(404).json({ error: 'Salle non trouvée' });
+      } else if (error.message === 'Cannot register to an unapproved gym') {
+        res.status(400).json({ error: 'Impossible de s\'inscrire à une salle non approuvée' });
+      } else if (error.message === 'Invalid gym ID') {
+        res.status(400).json({ error: 'ID de salle invalide' });
+      } else {
+        res.status(409).json({ error: 'Email déjà utilisé' });
+      }
     }
   }
 

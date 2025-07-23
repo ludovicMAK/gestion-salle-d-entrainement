@@ -24,7 +24,26 @@ export function userSchema(): Schema<User> {
             type: String,
             required: true,
             enum: Object.values(UserRole)
-        }
+        },
+        gym: {
+            type: Schema.Types.ObjectId,
+            ref: 'Gym',
+            required: function() {
+                return this.role === UserRole.USER; // Obligatoire seulement pour les utilisateurs normaux
+            }
+        },
+        actif: {
+            type: Boolean,
+            default: true
+        },
+        score: {
+            type: Number,
+            default: 0
+        },
+        badges: [{
+            type: Schema.Types.ObjectId,
+            ref: 'Badge'
+        }]
     }, {
         timestamps: true, // createdAt + updatedAt
         collection: "users",
