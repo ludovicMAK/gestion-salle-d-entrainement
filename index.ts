@@ -18,7 +18,7 @@ async function startAPI() {
     const authController = new AuthController(userService, sessionService);
     app.use('/auth', authController.buildRouter());
     const userController = new UserController(userService, sessionService);
-    app.use('/user', userController.buildRouter());
+    app.use('/', userController.buildRouter());
     const gymController = new GymController(gymService, sessionService, userService);
     app.use('/', gymController.buildRouter());
     const exerciseTypeController = new ExerciseTypeController(sessionService, exerciseTypeService);
