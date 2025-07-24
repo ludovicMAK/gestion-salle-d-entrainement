@@ -3,7 +3,6 @@ import {Router, Request, Response, json} from "express";
 import {SessionService} from "../services/mongoose/services";
 import {sessionMiddleware} from "../middlewares";
 import {UserRole} from "../models";
-import test from "node:test";
 
 export class AuthController {
   constructor(
