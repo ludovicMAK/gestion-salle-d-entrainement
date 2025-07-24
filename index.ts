@@ -1,8 +1,8 @@
 import {config} from "dotenv";
 import express from "express";
-import {openConnection, SessionService, UserService, GymService,ExerciseTypeService,EquipmentService,BadgeService} from "./services/mongoose";
+import {openConnection, SessionService, UserService, GymService,ExerciseTypeService,EquipmentService,BadgeService, TrainingSheetService} from "./services/mongoose";
 import {UserRole} from "./models";
-import {AuthController, UserController, GymController,ExerciseTypeController,EquipmentController,BadgeController} from "./controllers";
+import {AuthController, UserController, GymController,ExerciseTypeController,EquipmentController,BadgeController, TrainingSheetController} from "./controllers";
 config();
 
 async function startAPI() {
@@ -13,6 +13,7 @@ async function startAPI() {
     const exerciseTypeService = new ExerciseTypeService(connection);
     const equipmentService = new EquipmentService(connection);
     const badgeService = new BadgeService(connection);
+    const trainingSheetService = new TrainingSheetService(connection);
     await bootstrapAPI(userService);
     const app = express();
     const authController = new AuthController(userService, sessionService);
@@ -27,6 +28,8 @@ async function startAPI() {
     app.use('/', equipmentController.buildRouter());
     const badgeController = new BadgeController(badgeService, sessionService);
     app.use('/', badgeController.buildRouter());
+    const trainingSheetController = new TrainingSheetController(sessionService, trainingSheetService, userService);
+    app.use('/', trainingSheetController.buildRouter());
     app.listen(process.env.PORT, () => console.log(`API listening on port ${process.env.PORT}...`))
 }
 
