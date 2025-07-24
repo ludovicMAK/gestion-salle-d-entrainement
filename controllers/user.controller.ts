@@ -15,10 +15,25 @@ export class UserController {
             return;
         }
         
-        // Si c'est un utilisateur normal, la salle est obligatoire
         if ((!req.body.role || req.body.role === UserRole.USER) && !req.body.gymId) {
             res.status(400).json({ error: 'ID de la salle requis pour l\'inscription d\'un utilisateur' });
             return;
+        }
+        
+        if (req.user) {
+            const requestedRole = req.body.role || UserRole.USER;
+            
+            if (req.user.role === UserRole.OWNER && 
+                (requestedRole === UserRole.SUPER_ADMIN || requestedRole === UserRole.OWNER)) {
+                res.status(403).json({ error: "Vous n'avez pas l'autorisation de créer ce type d'utilisateur" });
+                return;
+            }
+            
+            if ((requestedRole === UserRole.SUPER_ADMIN || requestedRole === UserRole.OWNER) && 
+                req.user.role !== UserRole.SUPER_ADMIN) {
+                res.status(403).json({ error: "Seul un super administrateur peut créer ce type d'utilisateur" });
+                return;
+            }
         }
         
         try {
@@ -32,7 +47,6 @@ export class UserController {
             });
             res.status(201).json({ message: 'Utilisateur créé avec succès', user });
         } catch (error: any) {
-            console.error('Erreur création utilisateur:', error);
             if (error.message === 'Gym not found') {
                 res.status(404).json({ error: 'Salle non trouvée' });
             } else if (error.message === 'Cannot register to an unapproved gym') {
@@ -82,19 +96,15 @@ export class UserController {
             let users;
             
             if (!req.user) {
-                // Si pas d'utilisateur connecté, retourner une liste vide ou une erreur
                 res.status(401).json({ error: 'Authentification requise' });
                 return;
             }
             
             if (req.user.role === UserRole.SUPER_ADMIN) {
-                // Super admin voit tous les utilisateurs
                 users = await this.userService.getUsers();
             } else if (req.user.role === UserRole.OWNER) {
-                // Owner voit seulement les utilisateurs inscrits à ses salles
                 users = await this.userService.getUsersByOwner(req.user._id as string);
             } else {
-                // Les utilisateurs normaux ne peuvent pas voir la liste des utilisateurs
                 res.status(403).json({ error: 'Accès non autorisé' });
                 return;
             }
@@ -136,7 +146,6 @@ export class UserController {
             }
             res.json({ message: 'Utilisateur mis à jour avec succès', user });
         } catch (error) {
-            console.error('Erreur mise à jour utilisateur:', error);
             res.status(500).json({ error: 'Erreur lors de la mise à jour de l\'utilisateur' });
         }
     }
@@ -151,7 +160,6 @@ export class UserController {
             }
             res.status(200).json({ message: 'Utilisateur supprimé avec succès' });
         } catch (error) {
-            console.error('Erreur suppression utilisateur:', error);
             res.status(500).json({ error: 'Erreur lors de la suppression de l\'utilisateur' });
         }
     }
@@ -175,11 +183,8 @@ export class UserController {
                 return;
             }
             
-            // Vérifier si l'utilisateur a le droit de voir les utilisateurs de cette salle
             if (req.user.role === UserRole.SUPER_ADMIN) {
-                // Super admin peut voir tous les utilisateurs de toutes les salles
             } else if (req.user.role === UserRole.OWNER) {
-                // Vérifier que la salle appartient à ce propriétaire
                 const gym = await this.userService.connection.models.Gym.findById(gymId);
                 if (!gym || gym.owner.toString() !== req.user._id?.toString()) {
                     res.status(403).json({ error: 'Accès refusé : vous ne pouvez voir que les utilisateurs de vos propres salles' });
@@ -216,7 +221,6 @@ export class UserController {
             const message = actif ? 'Utilisateur activé' : 'Utilisateur désactivé';
             res.json({ message, user });
         } catch (error) {
-            console.error('Erreur changement statut utilisateur:', error);
             res.status(500).json({ error: 'Erreur lors du changement de statut' });
         }
     }
@@ -224,28 +228,27 @@ export class UserController {
     buildRouter(): Router {
         const router = Router();
         
-        // Routes protégées - nécessitent une authentification
         router.get('/users',
             sessionMiddleware(this.sessionService),
-            roleMiddleware(UserRole.OWNER), // Owner ou plus
+            roleMiddleware(UserRole.OWNER),
             this.getUsers.bind(this));
         
         router.get('/users/:id',
             sessionMiddleware(this.sessionService),
-            roleMiddleware(UserRole.OWNER), // Owner ou plus
+            roleMiddleware(UserRole.OWNER), 
             this.getUser.bind(this));
             
         router.get('/gyms/:gymId/users',
             sessionMiddleware(this.sessionService),
-            roleMiddleware(UserRole.OWNER), // Owner ou plus
+            roleMiddleware(UserRole.OWNER), 
             this.getUsersByGym.bind(this));
         
         router.get('/users/role/:role',
             sessionMiddleware(this.sessionService),
-            roleMiddleware(UserRole.OWNER), // Owner ou plus
+            roleMiddleware(UserRole.OWNER), 
             this.getUsersByRole.bind(this));
         
-        // Routes protégées - SUPER_ADMIN seulement
+        
         router.post('/users',
             sessionMiddleware(this.sessionService),
             roleMiddleware(UserRole.SUPER_ADMIN),

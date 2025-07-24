@@ -54,7 +54,6 @@ export class AuthController {
 
   async logout(req: Request, res: Response) {
     try {
-      // Récupérer le token de la session depuis les headers
       const token = req.headers.authorization?.replace("Bearer ", "");
       if (token) {
         await this.sessionService.deleteSession(token);
@@ -109,7 +108,6 @@ export class AuthController {
       });
       res.status(201).json({ message: "Inscription réussie", user });
     } catch (error: any) {
-      console.error('Erreur inscription:', error);
       if (error.message === 'Gym not found') {
         res.status(404).json({ error: 'Salle non trouvée' });
       } else if (error.message === 'Cannot register to an unapproved gym') {
@@ -136,10 +134,25 @@ export class AuthController {
         return;
       }
 
-      // Si c'est un utilisateur normal, la salle est obligatoire
       if ((!req.body.role || req.body.role === UserRole.USER) && !req.body.gymId) {
         res.status(400).json({ error: "ID de la salle requis pour l'inscription d'un utilisateur" });
         return;
+      }
+
+      if (req.user) {
+        const requestedRole = req.body.role || UserRole.USER;
+        
+        if (req.user.role === UserRole.OWNER && 
+            (requestedRole === UserRole.SUPER_ADMIN || requestedRole === UserRole.OWNER)) {
+          res.status(403).json({ error: "Vous n'avez pas l'autorisation de créer ce type d'utilisateur" });
+          return;
+        }
+        
+        if ((requestedRole === UserRole.SUPER_ADMIN || requestedRole === UserRole.OWNER) && 
+            req.user.role !== UserRole.SUPER_ADMIN) {
+          res.status(403).json({ error: "Seul un super administrateur peut créer ce type d'utilisateur" });
+          return;
+        }
       }
 
       const user = await this.userService.createUser({
@@ -154,7 +167,6 @@ export class AuthController {
 
       res.status(201).json({ message: "Inscription réussie", user });
     } catch (error: any) {
-      console.error('Erreur inscription:', error);
       if (error.message === 'Gym not found') {
         res.status(404).json({ error: 'Salle non trouvée' });
       } else if (error.message === 'Cannot register to an unapproved gym') {
@@ -170,7 +182,10 @@ export class AuthController {
   buildRouter(): Router {
     const router = Router();
     router.post("/login", json(), this.login.bind(this));
-    router.post("/register", json(), this.register.bind(this));
+    router.post("/register", 
+      sessionMiddleware(this.sessionService),
+      json(), 
+      this.register.bind(this));
     router.post("/subscribe", json(), this.subscribe.bind(this));
     router.post("/logout", sessionMiddleware(this.sessionService), this.logout.bind(this));
     router.get(

@@ -61,7 +61,6 @@ export class EquipmentController {
             });
             res.status(201).json({ message: 'Équipement créé avec succès', equipment });
         } catch (error) {
-            console.error('Erreur création équipement:', error);
             res.status(409).json({ error: 'Erreur lors de la création de l\'équipement', details: error });
         }
     }

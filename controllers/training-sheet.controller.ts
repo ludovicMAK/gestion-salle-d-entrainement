@@ -46,7 +46,8 @@ export class TrainingSheetController {
                 return;
             }
             
-            if (currentUser.role === UserRole.SUPER_ADMIN) {
+            
+            if (currentUser.role === UserRole.SUPER_ADMIN || currentUser._id?.toString() === userId) {
             } else if (currentUser.role === UserRole.OWNER) {
                 if (!targetUser.gym) {
                     res.status(403).json({ error: "Accès refusé : utilisateur sans salle" });
@@ -58,9 +59,6 @@ export class TrainingSheetController {
                     res.status(403).json({ error: "Accès refusé : vous ne pouvez voir que les fiches des utilisateurs de vos salles" });
                     return;
                 }
-            } else if (currentUser._id?.toString() === userId) {
-                // L'utilisateur peut voir ses propres fiches (équivalent à getMySheets)
-                // L'utilisateur peut voir ses propres fiches (équivalent à getMySheets)
             } else {
                 res.status(403).json({ error: "Accès refusé" });
                 return;
@@ -76,7 +74,7 @@ export class TrainingSheetController {
     async getSheet(req: Request, res: Response) {
         try {
             const { id } = req.params;
-            const user = (req as any).user;
+            const currentUser = (req as any).user;
             
             const sheet = await this.trainingSheetService.findById(id);
             
@@ -84,8 +82,21 @@ export class TrainingSheetController {
                 res.status(404).json({ error: "Fiche non trouvée" });
                 return;
             }
-    
-            if (sheet.user.toString() !== user._id.toString() && user.role !== UserRole.SUPER_ADMIN) {
+
+            if (currentUser.role === UserRole.SUPER_ADMIN || sheet.user.toString() === currentUser._id.toString()) {
+            } else if (currentUser.role === UserRole.OWNER) {
+                const sheetOwner = await this.userService.getUser(sheet.user.toString());
+                if (!sheetOwner || !sheetOwner.gym) {
+                    res.status(403).json({ error: "Accès refusé : utilisateur de la fiche sans salle" });
+                    return;
+                }
+                
+                const gym = await this.userService.connection.models.Gym.findById(sheetOwner.gym);
+                if (!gym || gym.owner.toString() !== currentUser._id?.toString()) {
+                    res.status(403).json({ error: "Accès refusé : vous ne pouvez voir que les fiches des utilisateurs de vos salles" });
+                    return;
+                }
+            } else {
                 res.status(403).json({ error: "Accès non autorisé à cette fiche" });
                 return;
             }
@@ -99,11 +110,28 @@ export class TrainingSheetController {
     async updateSheet(req: Request, res: Response) {
         try {
             const { id } = req.params;
-            const user = (req as any).user;
+            const currentUser = (req as any).user;
             
             const existingSheet = await this.trainingSheetService.findById(id);
-            if (!existingSheet || 
-                (existingSheet.user.toString() !== user._id.toString() && user.role !== UserRole.SUPER_ADMIN)) {
+            if (!existingSheet) {
+                res.status(404).json({ error: "Fiche non trouvée" });
+                return;
+            }
+
+            if (currentUser.role === UserRole.SUPER_ADMIN || existingSheet.user.toString() === currentUser._id.toString()) {
+            } else if (currentUser.role === UserRole.OWNER) {
+                const sheetOwner = await this.userService.getUser(existingSheet.user.toString());
+                if (!sheetOwner || !sheetOwner.gym) {
+                    res.status(403).json({ error: "Accès refusé : utilisateur de la fiche sans salle" });
+                    return;
+                }
+                
+                const gym = await this.userService.connection.models.Gym.findById(sheetOwner.gym);
+                if (!gym || gym.owner.toString() !== currentUser._id?.toString()) {
+                    res.status(403).json({ error: "Vous ne pouvez modifier que les fiches des utilisateurs de vos salles" });
+                    return;
+                }
+            } else {
                 res.status(403).json({ error: "Vous ne pouvez pas modifier cette fiche" });
                 return;
             }
@@ -124,11 +152,28 @@ export class TrainingSheetController {
     async deleteSheet(req: Request, res: Response) {
         try {
             const { id } = req.params;
-            const user = (req as any).user;
+            const currentUser = (req as any).user;
             
             const existingSheet = await this.trainingSheetService.findById(id);
-            if (!existingSheet || 
-                (existingSheet.user.toString() !== user._id.toString() && user.role !== UserRole.SUPER_ADMIN)) {
+            if (!existingSheet) {
+                res.status(404).json({ error: "Fiche non trouvée" });
+                return;
+            }
+
+            if (currentUser.role === UserRole.SUPER_ADMIN || existingSheet.user.toString() === currentUser._id.toString()) {
+            } else if (currentUser.role === UserRole.OWNER) {
+                const sheetOwner = await this.userService.getUser(existingSheet.user.toString());
+                if (!sheetOwner || !sheetOwner.gym) {
+                    res.status(403).json({ error: "Accès refusé : utilisateur de la fiche sans salle" });
+                    return;
+                }
+                
+                const gym = await this.userService.connection.models.Gym.findById(sheetOwner.gym);
+                if (!gym || gym.owner.toString() !== currentUser._id?.toString()) {
+                    res.status(403).json({ error: "Vous ne pouvez supprimer que les fiches des utilisateurs de vos salles" });
+                    return;
+                }
+            } else {
                 res.status(403).json({ error: "Vous ne pouvez pas supprimer cette fiche" });
                 return;
             }

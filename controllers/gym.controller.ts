@@ -73,7 +73,6 @@ export class GymController {
       });
       res.status(201).json({ message, gym });
     } catch (error) {
-      console.error('Erreur création salle:', error);
       res.status(409).json({ error: 'Erreur lors de la création de la salle', details: error });
     }
   }
@@ -267,7 +266,7 @@ export class GymController {
     const router = Router();
     
     router.get('/gyms', this.getGyms.bind(this));
-    router.get('/gyms/approved', this.getApprovedGyms.bind(this)); // Route publique pour les salles approuvées
+    router.get('/gyms/approved', this.getApprovedGyms.bind(this));
     router.get('/gyms/:id', this.getGym.bind(this));
     
     router.post('/gyms',

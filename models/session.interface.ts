@@ -5,7 +5,7 @@ export interface Session {
     _id?: Types.ObjectId;
     user: Types.ObjectId | User;
     expirationDate: Date;
-    // Compatibility fields
+
     userId?: Types.ObjectId;
     token?: string;
     expiresAt?: Date;

@@ -30,7 +30,7 @@ export interface User {
     lastName?: string;
     firstName?: string;
     password?: string;
-    gym?: Types.ObjectId | string; // Référence à la salle où l'utilisateur est inscrit
+    gym?: Types.ObjectId | string;
     createdAt?: Date;
     updatedAt?: Date;
 }

@@ -192,7 +192,6 @@ export class BadgeController {
 
             return awardedBadges;
         } catch (error) {
-            console.error('Erreur lors de la vérification des badges:', error);
             return [];
         }
     }

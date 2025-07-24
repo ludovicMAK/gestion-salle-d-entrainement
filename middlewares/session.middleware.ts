@@ -25,10 +25,8 @@ export function sessionMiddleware(
       }
 
       const token = parts[1];
-      console.log("🔑 Token reçu :", token);
 
       const session = await sessionService.findActiveSession(token);
-      console.log("🔍 session trouvée :", session);
 
       if (!session || !session.user) {
         return res.status(401).json({ error: "Session invalide ou expirée" });

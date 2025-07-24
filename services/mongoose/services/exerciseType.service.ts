@@ -7,12 +7,10 @@ export class ExerciseTypeService {
     readonly exerciseTypeModel: Model<ExerciseType>;
 
     constructor(public readonly connection: Mongoose) {
-        // Check if model already exists to avoid overwrite error
         this.exerciseTypeModel = connection.models.ExerciseType || connection.model('ExerciseType', exerciseTypeSchema());
     }
 
     async create(exerciseTypeData: createExerciseType): Promise<ExerciseType> {
-        console.log(exerciseTypeData, "Creating new exercise type");
         const exerciseType = new this.exerciseTypeModel(exerciseTypeData);
         return await exerciseType.save();
     }

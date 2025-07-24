@@ -29,7 +29,7 @@ export function userSchema(): Schema<User> {
             type: Schema.Types.ObjectId,
             ref: 'Gym',
             required: function() {
-                return this.role === UserRole.USER; // Obligatoire seulement pour les utilisateurs normaux
+                return this.role === UserRole.USER; 
             }
         },
         actif: {
@@ -45,8 +45,8 @@ export function userSchema(): Schema<User> {
             ref: 'Badge'
         }]
     }, {
-        timestamps: true, // createdAt + updatedAt
+        timestamps: true, 
         collection: "users",
-        versionKey: false, // désactive le versionning de model
+        versionKey: false, 
     });
 }

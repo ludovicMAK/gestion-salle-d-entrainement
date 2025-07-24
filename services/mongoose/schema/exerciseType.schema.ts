@@ -16,8 +16,8 @@ export function exerciseTypeSchema(): Schema<ExerciseType> {
             required: true
         }
     }, {
-        timestamps: true, // createdAt + updatedAt
+        timestamps: true, 
         collection: "exerciseTypes",
-        versionKey: false, // désactive le versionning de model
+        versionKey: false, 
     });
 }
