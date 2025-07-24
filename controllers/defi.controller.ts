@@ -193,7 +193,30 @@ export class DefiController {
 
             let awardedBadges: any[] = [];
             if (updatedSuivi.status === 'COMPLETED') {
-                awardedBadges = await this.checkAndAwardBadges(updatedSuivi.user);
+                const defi = await this.defiService.findById(updatedSuivi.defi);
+                
+                if (defi && defi.badges && defi.badges.length > 0) {
+                    const user = await this.userService.findById(updatedSuivi.user.toString());
+                    
+                    if (user) {
+                        const userBadgeIds = (user.badges || []).map((b: any) => b.toString());
+                        
+                        for (const badgeId of defi.badges) {
+                            const badgeIdStr = badgeId.toString();
+                            
+                            if (!userBadgeIds.includes(badgeIdStr)) {
+                                await this.userService.addBadgeToUser(updatedSuivi.user.toString(), badgeIdStr);
+                                const badge = await this.badgeService.findById(badgeIdStr);
+                                if (badge) {
+                                    awardedBadges.push(badge);
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                const ruleBadges = await this.checkAndAwardBadges(updatedSuivi.user);
+                awardedBadges = [...awardedBadges, ...ruleBadges];
             }
 
             res.json({ 
@@ -239,28 +262,53 @@ export class DefiController {
     private async checkAndAwardBadges(userId: any): Promise<any[]> {
         try {
             const awardedBadges: any[] = [];
-            const activeRules = await this.badgeRuleService.findActive();
-            const userStats = await this.defiSuiviService.getUserStats(userId);
-            const userDefis = await this.defiSuiviService.findByUser(userId);
             const user = await this.userService.findById(userId.toString());
             
-            if (!user) return awardedBadges;
+            if (!user) {
+                return awardedBadges;
+            }
 
             const userBadgeIds = (user.badges || []).map((b: any) => b.toString());
+
+            const userDefis = await this.defiSuiviService.findByUser(userId);
+            const completedDefis = userDefis.filter(suivi => suivi.status === 'COMPLETED');
+            
+            for (const suivi of completedDefis) {
+                const defi = await this.defiService.findById(suivi.defi);
+                if (defi && defi.badges) {
+                    for (const badgeId of defi.badges) {
+                        const badgeIdStr = badgeId.toString();
+                        if (!userBadgeIds.includes(badgeIdStr)) {
+                            await this.userService.addBadgeToUser(userId.toString(), badgeIdStr);
+                            const badge = await this.badgeService.findById(badgeIdStr);
+                            if (badge) {
+                                awardedBadges.push(badge);
+                            }
+                            userBadgeIds.push(badgeIdStr); 
+                        }
+                    }
+                }
+            }
+
+            const activeRules = await this.badgeRuleService.findActive();
+            const userStats = await this.defiSuiviService.getUserStats(userId);
 
             for (const rule of activeRules) {
                 const badgeId = rule.badge.toString();
                 
-                if (userBadgeIds.includes(badgeId)) continue;
+                if (userBadgeIds.includes(badgeId)) {
+                    continue;
+                }
 
                 const eligible = await this.checkBadgeEligibility(rule, userId, userStats, userDefis);
                 if (eligible) {
                     await this.userService.addBadgeToUser(userId.toString(), badgeId);
                     const badge = await this.badgeService.findById(badgeId);
-                    if (badge) awardedBadges.push(badge);
+                    if (badge) {
+                        awardedBadges.push(badge);
+                    }
                 }
             }
-
             return awardedBadges;
         } catch (error) {
             return [];
@@ -272,17 +320,23 @@ export class DefiController {
             switch (condition.type) {
                 case 'DEFI_COMPLETION':
                     const completedCount = userStats.completed || 0;
-                    if (completedCount < condition.value) return false;
+                    if (completedCount < condition.value) {
+                        return false;
+                    }
                     break;
                 
                 case 'REPETITIONS':
                     const totalReps = userDefis.reduce((sum, defi) => sum + (defi.currentRepetitions || 0), 0);
-                    if (totalReps < condition.value) return false;
+                    if (totalReps < condition.value) {
+                        return false;
+                    }
                     break;
                 
                 case 'SCORE_THRESHOLD':
                     const totalPoints = userStats.totalPoints || 0;
-                    if (totalPoints < condition.value) return false;
+                    if (totalPoints < condition.value) {
+                        return false;
+                    }
                     break;
                 
                 case 'DIFFICULTY_LEVEL':
@@ -290,7 +344,9 @@ export class DefiController {
                         const difficultyDefis = userDefis.filter(defi => 
                             defi.defi?.difficulty === condition.difficulty && defi.status === 'COMPLETED'
                         );
-                        if (difficultyDefis.length < condition.value) return false;
+                        if (difficultyDefis.length < condition.value) {
+                            return false;
+                        }
                     }
                     break;
 

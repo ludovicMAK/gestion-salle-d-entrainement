@@ -19,6 +19,7 @@ export class DefiSuiviService {
             .populate('user', 'firstName lastName email')
             .populate('defi')
             .populate('badgesEarned')
+            .select('+endDate +lastActivity +pointsEarned')
             .exec();
     }
 
@@ -64,20 +65,59 @@ export class DefiSuiviService {
         if (!defiSuivi) return null;
 
         const progressPercentage = Math.min(100, (currentRepetitions / defiSuivi.targetRepetitions) * 100);
-        const status = progressPercentage >= 100 ? 'COMPLETED' : defiSuivi.status;
-        const endDate = status === 'COMPLETED' ? new Date() : defiSuivi.endDate;
+        const isCompleted = progressPercentage >= 100;
+        const wasCompleted = defiSuivi.status === 'COMPLETED';
+        const status = isCompleted ? 'COMPLETED' : defiSuivi.status;
+        
+    
+        const endDate = (isCompleted && !wasCompleted) ? new Date() : defiSuivi.endDate;
+        
+        let pointsEarned = defiSuivi.pointsEarned || 0;
+        if (isCompleted && !wasCompleted) {
+            pointsEarned = 100;
+            
+            const defi = await this.defiSuiviModel.findById(id).populate('defi').exec();
+            if (defi?.defi) {
+                const difficulty = (defi.defi as any).difficulty;
+                switch (difficulty) {
+                    case 'EASY':
+                        pointsEarned += 25;
+                        break;
+                    case 'MEDIUM':
+                        pointsEarned += 50;
+                        break;
+                    case 'HARD':
+                        pointsEarned += 100;
+                        break;
+                }
+            }
+        }
 
-        return await this.defiSuiviModel.findByIdAndUpdate(id, {
+        const updateData: any = {
             currentRepetitions,
             progressPercentage,
             status,
-            endDate,
+            pointsEarned,
             lastActivity: new Date()
-        }, { new: true })
+        };
+
+        if (endDate) {
+            updateData.endDate = endDate;
+        }
+
+        const updatedSuivi = await this.defiSuiviModel.findByIdAndUpdate(id, updateData, { new: true })
             .populate('user', 'firstName lastName email')
             .populate('defi')
             .populate('badgesEarned')
             .exec();
+
+        if (updatedSuivi) {
+            updatedSuivi.endDate = updatedSuivi.endDate || endDate;
+            updatedSuivi.pointsEarned = updatedSuivi.pointsEarned || pointsEarned;
+            updatedSuivi.lastActivity = updatedSuivi.lastActivity || new Date();
+        }
+
+        return updatedSuivi;
     }
 
     async update(id: string | Types.ObjectId, updateData: Partial<DefiSuivi>): Promise<DefiSuivi | null> {
