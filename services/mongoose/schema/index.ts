@@ -5,3 +5,6 @@ export * from './badge.schema';
 export * from './equipment.schema';
 export * from './exerciseType.schema';
 export * from './training-sheet.schema';
+export * from './defi.schema';
+export * from './defi-suivi.schema';
+export * from './badge-rule.schema';

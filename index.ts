@@ -1,8 +1,8 @@
 import {config} from "dotenv";
 import express from "express";
-import {openConnection, SessionService, UserService, GymService,ExerciseTypeService,EquipmentService,BadgeService, TrainingSheetService} from "./services/mongoose";
+import {openConnection, SessionService, UserService, GymService,ExerciseTypeService,EquipmentService,BadgeService, TrainingSheetService, DefiService, DefiSuiviService, BadgeRuleService} from "./services/mongoose";
 import {UserRole} from "./models";
-import {AuthController, UserController, GymController,ExerciseTypeController,EquipmentController,BadgeController, TrainingSheetController} from "./controllers";
+import {AuthController, UserController, GymController,ExerciseTypeController,EquipmentController,BadgeController, TrainingSheetController, DefiController} from "./controllers";
 config();
 
 async function startAPI() {
@@ -14,6 +14,9 @@ async function startAPI() {
     const equipmentService = new EquipmentService(connection);
     const badgeService = new BadgeService(connection);
     const trainingSheetService = new TrainingSheetService(connection);
+    const defiService = new DefiService(connection);
+    const defiSuiviService = new DefiSuiviService(connection);
+    const badgeRuleService = new BadgeRuleService(connection);
     await bootstrapAPI(userService);
     const app = express();
     const authController = new AuthController(userService, sessionService);
@@ -26,10 +29,12 @@ async function startAPI() {
     app.use('/', exerciseTypeController.buildRouter());
     const equipmentController = new EquipmentController(equipmentService, sessionService, userService);
     app.use('/', equipmentController.buildRouter());
-    const badgeController = new BadgeController(badgeService, sessionService);
+    const badgeController = new BadgeController(badgeService, badgeRuleService, defiSuiviService, userService, sessionService);
     app.use('/', badgeController.buildRouter());
     const trainingSheetController = new TrainingSheetController(sessionService, trainingSheetService, userService);
     app.use('/', trainingSheetController.buildRouter());
+    const defiController = new DefiController(defiService, defiSuiviService, badgeService, badgeRuleService, userService, sessionService);
+    app.use('/defis', defiController.getRouter());
     app.listen(process.env.PORT, () => console.log(`API listening on port ${process.env.PORT}...`))
 }
 

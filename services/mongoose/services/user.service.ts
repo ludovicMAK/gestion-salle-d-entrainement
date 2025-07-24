@@ -3,7 +3,6 @@ import { User, UserRole } from "../../../models";
 import {userSchema} from "../schema";
 import {sha256} from "../../../utils";
 
-// omit permet d'enlever des clés d'un type pour en créer un nouveau
 export type CreateUser = Omit<User, '_id' | 'createdAt' | 'updatedAt'>;
 
 export class UserService {
@@ -11,7 +10,6 @@ export class UserService {
     readonly userModel: Model<User>;
 
     constructor(public readonly connection: Mongoose) {
-        // Check if model already exists to avoid overwrite error
         this.userModel = connection.models.User || connection.model('User', userSchema());
     }
 
@@ -34,7 +32,6 @@ export class UserService {
             throw new Error('Password is required');
         }
         
-        // Vérifier que la salle existe si c'est un utilisateur normal
         if (user.role === UserRole.USER && user.gym) {
             if (!isValidObjectId(user.gym as string)) {
                 throw new Error('Invalid gym ID');
@@ -77,11 +74,9 @@ export class UserService {
         if(!isValidObjectId(ownerId)) {
             return [];
         }
-        // Trouver d'abord toutes les salles appartenant au propriétaire
         const gyms = await this.connection.models.Gym.find({ owner: ownerId });
         const gymIds = gyms.map(gym => gym._id);
         
-        // Ensuite trouver tous les utilisateurs inscrits à ces salles
         return this.userModel.find({ gym: { $in: gymIds } }).populate('gym', 'name address').sort({ createdAt: -1 });
     }
 
@@ -119,6 +114,40 @@ export class UserService {
             return null;
         }
         return this.userModel.findByIdAndUpdate(userId, { actif }, { new: true });
+    }
+
+    async findById(userId: string): Promise<User | null> {
+        return this.getUser(userId);
+    }
+
+    async findByIdWithBadges(userId: string): Promise<User | null> {
+        if(!isValidObjectId(userId)) {
+            return null;
+        }
+        return this.userModel.findById(userId)
+            .populate('gym', 'name address')
+            .populate('badges')
+            .exec();
+    }
+
+    async addBadgeToUser(userId: string, badgeId: string): Promise<User | null> {
+        if(!isValidObjectId(userId) || !isValidObjectId(badgeId)) {
+            return null;
+        }
+        
+        const user = await this.userModel.findById(userId);
+        if (!user) return null;
+        
+        const userBadges = user.badges || [];
+        if (userBadges.some((b: any) => b.toString() === badgeId)) {
+            return user; 
+        }
+        
+        return this.userModel.findByIdAndUpdate(
+            userId, 
+            { $addToSet: { badges: badgeId } }, 
+            { new: true }
+        ).populate('badges');
     }
 
 }

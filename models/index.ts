@@ -4,4 +4,7 @@ export * from './exerciseType.interface';
 export * from './badge.interface';
 export * from './session.interface';
 export * from './exerciseType.interface'
-export * from './training-sheet.interface'
+export * from './training-sheet.interface';
+export * from './defi.interface';
+export * from './defi-suivi.interface';
+export * from './badge-rule.interface';

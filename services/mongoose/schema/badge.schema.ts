@@ -15,14 +15,14 @@ export function badgeSchema(): Schema<Badge> {
             type: String,
             required: true
         },
-        condition: {
-            type: String,
-            required: true
-        },
         points: {
             type: Number,
             required: true,
             default: 0
+        },
+        category: {
+            type: String,
+            required: false
         }
     }, {
         timestamps: true,

@@ -1,12 +1,11 @@
 import { Types } from 'mongoose';
+import { Timestamps } from './timestamps';
 
-export interface Badge {
+export interface Badge extends Timestamps {
     _id?: Types.ObjectId;
     nom: string;
     description: string;
     icone: string;
-    condition: string;
     points: number;
-    createdAt?: Date;
-    updatedAt?: Date;
+    category?: string; 
 }

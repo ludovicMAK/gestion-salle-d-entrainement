@@ -5,3 +5,6 @@ export * from './badge.service';
 export * from './exerciseType.service';
 export * from './equipment.service';
 export * from './training-sheet.service';
+export * from './defi.service';
+export * from './defi-suivi.service';
+export * from './badge-rule.service';
